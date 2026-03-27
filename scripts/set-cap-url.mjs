@@ -1,11 +1,6 @@
 import fs from "fs";
 
 const url = process.argv[2];
-if (!url) {
-  console.error("Usage: node scripts/set-cap-url.mjs <url>");
-  console.error("Example: node scripts/set-cap-url.mjs http://192.168.1.100:3000");
-  process.exit(1);
-}
 
 const cfgPath = "capacitor.config.ts";
 if (!fs.existsSync(cfgPath)) {
@@ -15,13 +10,44 @@ if (!fs.existsSync(cfgPath)) {
 
 let src = fs.readFileSync(cfgPath, "utf8");
 
-// Replace existing url: "..." inside server: { ... }
-if (src.includes("server:")) {
-  src = src.replace(/url:\s*\"[^\"]*\"/, `url: "${url}"`);
+const hasServerBlock = src.includes("server:");
+
+if (!url) {
+  // No URL provided: ensure we are using bundled assets (no server.url override).
+  if (hasServerBlock) {
+    // Remove a `url: "..."` line if present (with or without trailing comma).
+    src = src.replace(/\n\s*url:\s*"[^"]*"\s*,?\s*/g, "\n");
+
+    // Ensure cleartext stays enabled.
+    if (!/cleartext:\s*true/.test(src)) {
+      src = src.replace(/server:\s*\{/, "server: {\n    cleartext: true,");
+    }
+  } else {
+    src = src.replace(
+      /const config: CapacitorConfig = \{/, 
+      "const config: CapacitorConfig = {\n  server: { cleartext: true },"
+    );
+  }
+
+  fs.writeFileSync(cfgPath, src, "utf8");
+  console.log("Cleared capacitor.config.ts server.url (using bundled assets)");
+  process.exit(0);
+}
+
+// URL provided: set/update server.url to load from remote server.
+if (hasServerBlock) {
+  if (/url:\s*"[^"]*"/.test(src)) {
+    src = src.replace(/url:\s*"[^"]*"/, `url: "${url}"`);
+  } else {
+    src = src.replace(/server:\s*\{/, `server: {\n    url: "${url}",`);
+  }
+
+  if (!/cleartext:\s*true/.test(src)) {
+    src = src.replace(/server:\s*\{/, "server: {\n    cleartext: true,");
+  }
 } else {
-  // Insert a server block if missing (very unlikely in this project)
   src = src.replace(
-    /const config: CapacitorConfig = \{/,
+    /const config: CapacitorConfig = \{/, 
     `const config: CapacitorConfig = {\n  server: { url: "${url}", cleartext: true },`
   );
 }

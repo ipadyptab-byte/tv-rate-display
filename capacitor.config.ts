@@ -5,9 +5,10 @@ const config: CapacitorConfig = {
   appName: "GoldRatesApp",
   webDir: "dist/public",
   bundledWebRuntime: false,
+  // By default the Android app loads the bundled web assets from webDir.
+  // Use `npm run android:env:public` (or `node scripts/set-cap-url.mjs <url>`) to
+  // point the app at a remote server for live content.
   server: {
-    // Use your static IP and port for external network access
-    url: "http://192.168.1.83:3000",
     cleartext: true
   },
   android: {

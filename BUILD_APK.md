@@ -1,6 +1,8 @@
 # Build Android APK
 
-This project is set up with Capacitor to package the Vite + Express app into a native Android app that points to your server.
+This project is set up with Capacitor to package the Vite + Express app into a native Android app.
+
+By default, the Android app **bundles the built web pages** (so you can navigate all pages inside the app) and it only talks to your server for API requests.
 
 ## Prerequisites
 
@@ -17,7 +19,7 @@ Create your environment file:
 - For local development:
   - cp .env.local.example .env
   - Fill DATABASE_URL and keep PORT=3000
-- For mobile build that should connect to your public/static IP:
+- For a mobile build that should connect to your public/static IP:
   - The project includes .env.mobile which sets:
     - VITE_API_BASE_URL=http://103.159.153.24:3000
     - PORT=3000
@@ -31,7 +33,7 @@ You can modify .env.mobile if your host/port change.
 
 This runs:
 - npm run build (builds client to dist/public and server to dist/index.js)
-- copies .env.mobile to .env so the app points to your public server
+- copies .env.mobile to .env so the web layer points to your server
 
 ## 3) Initialize Capacitor (first time only)
 
@@ -63,23 +65,24 @@ In Android Studio:
 - Choose release, sign, and build
 - The signed release APK will be saved under app/build/outputs/apk/release/
 
-## 7) Pointing the app to your server
+## 7) Loading web content: bundled vs remote
 
-The mobile app talks to the server URL from two places:
-- VITE_API_BASE_URL in .env.mobile (used by the web layer to make API calls)
-- capacitor.config.ts `server.url` (controls what web content is loaded by the native app)
+There are two ways the app can load the UI:
 
-Defaults included:
-- capacitor.config.ts points to http://103.159.153.24:3000 (cleartext enabled)
-- .env.mobile sets VITE_API_BASE_URL=http://103.159.153.24:3000
+- Bundled (recommended): app loads local built pages from `dist/public`
+  - This is the default and works offline for UI navigation.
+- Remote: app loads the UI directly from a server URL (useful for live updates)
+  - Set `capacitor.config.ts` `server.url` using:
+    - npm run android:env:public
+    - or: node scripts/set-cap-url.mjs http://YOUR_IP:3000
 
-Change these if you deploy behind HTTPS and/or a domain.
+API calls are controlled separately via `VITE_API_BASE_URL` (from `.env.mobile`).
 
 ## 8) Troubleshooting
 
 - White screen or network error on Android
-  - Ensure the server is reachable from the device network
-  - If using HTTP (not HTTPS), `cleartext: true` is set in capacitor.config.ts
+  - If using a remote `server.url`, ensure the server is reachable from the device network
+  - If using HTTP (not HTTPS), `cleartext: true` is enabled in capacitor.config.ts
 - API CORS
   - Server includes CORS middleware. If you lock origins down, add your domain/app origin.
 - File upload limits
