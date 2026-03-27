@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { ratesApi, promoApi, mediaApi, bannerApi, settingsApi } from "@/lib/api";
 
 export default function TVDisplay() {
+  const queryClient = useQueryClient();
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [showingRates, setShowingRates] = useState(true);
@@ -41,11 +42,24 @@ export default function TVDisplay() {
   }, []);
 
   // Data queries
-  const { data: currentRates } = useQuery({
+  const { data: currentRates, isLoading: ratesLoading, error: ratesError } = useQuery({
     queryKey: ["/api/rates/current"],
     queryFn: ratesApi.getCurrent,
     refetchInterval: 30000
   });
+
+  const syncRatesMutation = useMutation({
+    mutationFn: ratesApi.sync,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["/api/rates/current"] });
+    },
+  });
+
+  useEffect(() => {
+    if (currentRates === null && !syncRatesMutation.isPending && !syncRatesMutation.isSuccess) {
+      syncRatesMutation.mutate();
+    }
+  }, [currentRates]);
 
   const { data: settings } = useQuery({
     queryKey: ["/api/settings/display"],
@@ -160,12 +174,35 @@ export default function TVDisplay() {
     ease: currentPromo?.transition_effect === 'bounce' ? [0.34, 1.56, 0.64, 1] : "easeInOut" as const,
   };
 
-  if (!currentRates) {
+  if (ratesLoading || syncRatesMutation.isPending) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-jewelry-primary to-jewelry-secondary">
         <div className="text-center text-white">
           <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-2xl font-semibold">Loading Rates...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (ratesError) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-jewelry-primary to-jewelry-secondary">
+        <div className="text-center text-white max-w-xl px-6">
+          <p className="text-2xl font-semibold mb-2">Unable to load rates</p>
+          <p className="text-sm opacity-90 break-words">{(ratesError as Error).message}</p>
+          <p className="text-sm opacity-90 mt-4">Check that /api is working and DATABASE_URL is set in Vercel.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentRates) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-jewelry-primary to-jewelry-secondary">
+        <div className="text-center text-white max-w-xl px-6">
+          <p className="text-2xl font-semibold mb-2">No rates yet</p>
+          <p className="text-sm opacity-90">Open <span className="font-semibold">/rates-sync</span> to sync, or configure a cron job to call <span className="font-semibold">/api/rates/sync</span>.</p>
         </div>
       </div>
     );
