@@ -2,7 +2,7 @@ import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import postgres from "postgres";
 import { registerRoutes } from "./routes";
-import { log } from "./vite";
+import { log } from "./log";
 
 export async function createApp() {
   const app = express();
