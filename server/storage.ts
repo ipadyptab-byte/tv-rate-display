@@ -1,5 +1,3 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
 import {
   goldRates,
   displaySettings,
@@ -21,31 +19,7 @@ import {
   type InsertRateSettings
 } from "@shared/schema";
 import { eq, desc, asc } from "drizzle-orm";
-import { mkdirSync } from "fs";
-import { join } from "path";
-
-const uploadsDir = process.env.VERCEL ? "/tmp/uploads" : join(process.cwd(), "uploads");
-try {
-  mkdirSync(uploadsDir, { recursive: true });
-} catch {
-  // ignore; on serverless the filesystem may be read-only and we store uploads in DB anyway
-}
-
-let client: ReturnType<typeof postgres> | null = null;
-let db: ReturnType<typeof drizzle> | null = null;
-
-function getDb() {
-  if (db) return db;
-
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error("DATABASE_URL environment variable is required");
-  }
-
-  client = postgres(connectionString);
-  db = drizzle(client);
-  return db;
-}
+import { getDb } from "./db";
 
 export interface IStorage {
   // Gold Rates
@@ -156,13 +130,15 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
 
   // Media Items
   async getMediaItems(activeOnly = false): Promise<MediaItem[]> {
+    const db = getDb();
+
     if (activeOnly) {
-      return await getDb().select().from(mediaItems)
+      return await db.select().from(mediaItems)
         .where(eq(mediaItems.is_active, true))
         .orderBy(asc(mediaItems.order_index));
     }
 
-    return await getDb().select().from(mediaItems)
+    return await db.select().from(mediaItems)
       .orderBy(asc(mediaItems.order_index));
   }
 
@@ -186,13 +162,15 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
 
   // Promo Images
   async getPromoImages(activeOnly = false): Promise<PromoImage[]> {
+    const db = getDb();
+
     if (activeOnly) {
-      return await getDb().select().from(promoImages)
+      return await db.select().from(promoImages)
         .where(eq(promoImages.is_active, true))
         .orderBy(asc(promoImages.order_index));
     }
 
-    return await getDb().select().from(promoImages)
+    return await db.select().from(promoImages)
       .orderBy(asc(promoImages.order_index));
   }
 
