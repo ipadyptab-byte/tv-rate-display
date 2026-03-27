@@ -43,6 +43,38 @@ You can use Nginx or Caddy. Examples are provided in deploy/:
 - Nginx: deploy/NGINX_EXAMPLE.conf
 - Caddy: deploy/CADDYFILE.example
 
+### Hosting under a sub-path (example: /displayrates)
+
+If your main website already runs on `www.devi-jewellers.com` and you want this app at:
+
+- https://www.devi-jewellers.com/displayrates
+
+Run this Node app on an internal port (example: `127.0.0.1:3000`) and configure your reverse proxy to forward `/displayrates/*` to it.
+
+**Important:** The proxy should *strip* the `/displayrates` prefix when forwarding to the Node app.
+
+Nginx example:
+
+```nginx
+location = /displayrates {
+  return 301 /displayrates/;
+}
+
+location /displayrates/ {
+  proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
+
+  # Strip /displayrates/ before proxying
+  proxy_pass http://127.0.0.1:3000/;
+}
+```
+
+Then build the client with:
+- `VITE_BASE_PATH=/displayrates/`
+- `VITE_API_BASE_URL=https://www.devi-jewellers.com/displayrates`
+
 ### WebSockets
 
 The app may use WebSockets (e.g., for future features). The provided proxy configs include the required Upgrade/Connection headers.
