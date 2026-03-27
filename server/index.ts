@@ -1,10 +1,8 @@
-import 'dotenv/config';
-import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { createServer } from "http";
 import { setupVite, serveStatic, log } from "./vite";
-import postgres from "postgres";
 import { storage } from "./storage";
 import { insertGoldRateSchema } from "@shared/schema";
+import { createApp } from "./app";
 
 // Robust global error handlers to prevent server crash on transient network failures
 process.on("unhandledRejection", (reason) => {
@@ -12,65 +10,6 @@ process.on("unhandledRejection", (reason) => {
 });
 process.on("uncaughtException", (err) => {
   log(`uncaughtException: ${err.message}`);
-});
-
-const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
-
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
-
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
-});
-
-// Health check endpoint
-app.get("/api/health", async (req, res) => {
-  try {
-    const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) {
-      return res.status(500).json({ 
-        status: "unhealthy", 
-        database: "disconnected", 
-        error: "DATABASE_URL not set" 
-      });
-    }
-
-    const client = postgres(connectionString);
-    await client`SELECT 1`;
-    await client.end();
-    res.json({ status: "healthy", database: "connected" });
-  } catch (error) {
-    res.status(500).json({ 
-      status: "unhealthy", 
-      database: "disconnected", 
-      error: (error as Error).message 
-    });
-  }
 });
 
 async function performRateSync(): Promise<void> {
@@ -163,15 +102,8 @@ function scheduleRateSync() {
 }
 
 (async () => {
-  const server = await registerRoutes(app);
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
+  const app = await createApp();
+  const server = createServer(app);
 
   if (app.get("env") === "development") {
     await setupVite(app, server);
@@ -182,7 +114,7 @@ function scheduleRateSync() {
   scheduleRateSync();
 
   const port = parseInt(process.env.PORT || '3000', 10);
- server.listen(port, "0.0.0.0", () => {
-  log(`serving on port ${port}`);
-});
+  server.listen(port, "0.0.0.0", () => {
+    log(`serving on port ${port}`);
+  });
 })();
