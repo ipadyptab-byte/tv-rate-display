@@ -65,13 +65,22 @@ export async function createApp() {
     }
   });
 
+  // Quick diagnostics
+  app.get("/api/debug/env", (_req, res) => {
+    res.json({
+      hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+      nodeEnv: process.env.NODE_ENV,
+      vercel: Boolean(process.env.VERCEL),
+    });
+  });
+
   await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
+    res.status(status).json({ message, error: err?.message });
   });
 
   return app;
