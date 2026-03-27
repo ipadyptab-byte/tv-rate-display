@@ -20,6 +20,7 @@ function Router() {
       <Navigation />
       <Switch>
         <Route path="/" component={TVDisplay} />
+        <Route path="/displayrates" component={TVDisplay} />
         <Route path="/mobile" component={MobileControl} />
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/media" component={MediaManager} />
