@@ -1,6 +1,5 @@
 import type { Express } from "express";
 import express from "express";
-import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import multer from "multer";
 import { z } from "zod";
@@ -70,7 +69,7 @@ const uploadBanner = multer({
   },
 });
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express): Promise<void> {
   // Serve binary data from database
   app.get("/api/media/:id/file", async (req, res) => {
     try {
@@ -654,7 +653,4 @@ app.put("/api/settings/display/:id?", async (req, res) => {
       });
     }
   });
-
-  const httpServer = createServer(app);
-  return httpServer;
 }
