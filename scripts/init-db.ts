@@ -49,10 +49,11 @@ async function initDatabase() {
   `;
 
   await client`
-    CREATE TABLE IF NOT EXISTS mediaitems (
+    CREATE TABLE IF NOT EXISTS media_items (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
-      file_url TEXT NOT NULL,
+      file_url TEXT,
+      file_data TEXT,
       media_type TEXT NOT NULL,
       duration_seconds INTEGER DEFAULT 30,
       order_index INTEGER DEFAULT 0,
@@ -67,7 +68,8 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS promo_images (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
-      image_url TEXT NOT NULL,
+      image_url TEXT,
+      image_data TEXT,
       duration_seconds INTEGER DEFAULT 5,
       transition_effect TEXT DEFAULT 'fade',
       order_index INTEGER DEFAULT 0,
@@ -81,8 +83,23 @@ async function initDatabase() {
     CREATE TABLE IF NOT EXISTS banner_settings (
       id SERIAL PRIMARY KEY,
       banner_image_url TEXT,
+      banner_image_data TEXT,
       banner_height INTEGER DEFAULT 120,
       is_active BOOLEAN DEFAULT true,
+      created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+
+  await client`
+    CREATE TABLE IF NOT EXISTS rate_settings (
+      id SERIAL PRIMARY KEY,
+      perc_24k_purchase REAL DEFAULT 0.985,
+      perc_22k_sale REAL DEFAULT 0.92,
+      perc_22k_purchase REAL DEFAULT 0.90,
+      perc_18k_sale REAL DEFAULT 0.86,
+      perc_18k_purchase REAL DEFAULT 0.80,
+      silver_purchase_offset REAL DEFAULT -5000,
+      check_interval_minutes INTEGER DEFAULT 5,
       created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;

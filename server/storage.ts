@@ -1,10 +1,10 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { 
-  goldRates, 
-  displaySettings, 
-  mediaItems, 
-  promoImages, 
+import {
+  goldRates,
+  displaySettings,
+  mediaItems,
+  promoImages,
   bannerSettings,
   rateSettings,
   type GoldRate,
@@ -24,19 +24,28 @@ import { eq, desc, asc } from "drizzle-orm";
 import { mkdirSync } from "fs";
 import { join } from "path";
 
-// Create uploads directory
-const uploadsDir = join(process.cwd(), "uploads");
-mkdirSync(uploadsDir, { recursive: true });
-
-// Get database connection string from environment variable
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) {
-  throw new Error("DATABASE_URL environment variable is required");
+const uploadsDir = process.env.VERCEL ? "/tmp/uploads" : join(process.cwd(), "uploads");
+try {
+  mkdirSync(uploadsDir, { recursive: true });
+} catch {
+  // ignore; on serverless the filesystem may be read-only and we store uploads in DB anyway
 }
 
-// Create PostgreSQL client
-const client = postgres(connectionString);
-const db = drizzle(client);
+let client: ReturnType<typeof postgres> | null = null;
+let db: ReturnType<typeof drizzle> | null = null;
+
+function getDb() {
+  if (db) return db;
+
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL environment variable is required");
+  }
+
+  client = postgres(connectionString);
+  db = drizzle(client);
+  return db;
+}
 
 export interface IStorage {
   // Gold Rates
@@ -75,7 +84,7 @@ export interface IStorage {
 export class PostgresStorage implements IStorage {
   // Gold Rates
   async getCurrentRates(): Promise<GoldRate | undefined> {
-    const rates = await db.select().from(goldRates)
+    const rates = await getDb().select().from(goldRates)
       .where(eq(goldRates.is_active, true))
       .orderBy(desc(goldRates.created_date))
       .limit(1);
@@ -83,15 +92,17 @@ export class PostgresStorage implements IStorage {
   }
 
   async createGoldRate(rate: InsertGoldRate): Promise<GoldRate> {
+    const db = getDb();
+
     // Deactivate all existing rates
     await db.update(goldRates).set({ is_active: false });
-    
+
     const result = await db.insert(goldRates).values(rate).returning();
     return result[0];
   }
 
   async updateGoldRate(id: number, rate: Partial<InsertGoldRate>): Promise<GoldRate | undefined> {
-    const result = await db.update(goldRates)
+    const result = await getDb().update(goldRates)
       .set(rate)
       .where(eq(goldRates.id, id))
       .returning();
@@ -104,18 +115,18 @@ export class PostgresStorage implements IStorage {
 
 // Add to PostgresStorage class
 async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySettings> {
-  const result = await db.insert(displaySettings).values(settings).returning();
+  const result = await getDb().insert(displaySettings).values(settings).returning();
   return result[0];
 } 
   async getDisplaySettings(): Promise<DisplaySettings | undefined> {
-    const settings = await db.select().from(displaySettings)
+    const settings = await getDb().select().from(displaySettings)
       .orderBy(desc(displaySettings.created_date))
       .limit(1);
     return settings[0];
   }
 
   async updateDisplaySettings(id: number, settings: Partial<InsertDisplaySettings>): Promise<DisplaySettings | undefined> {
-    const result = await db.update(displaySettings)
+    const result = await getDb().update(displaySettings)
       .set(settings)
       .where(eq(displaySettings.id, id))
       .returning();
@@ -124,19 +135,19 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
 
   // Rate Calculation Settings
   async getRateSettings(): Promise<RateSettings | undefined> {
-    const settings = await db.select().from(rateSettings)
+    const settings = await getDb().select().from(rateSettings)
       .orderBy(desc(rateSettings.created_date))
       .limit(1);
     return settings[0];
   }
 
   async createRateSettings(settings: InsertRateSettings): Promise<RateSettings> {
-    const result = await db.insert(rateSettings).values(settings).returning();
+    const result = await getDb().insert(rateSettings).values(settings).returning();
     return result[0];
   }
 
   async updateRateSettings(id: number, settings: Partial<InsertRateSettings>): Promise<RateSettings | undefined> {
-    const result = await db.update(rateSettings)
+    const result = await getDb().update(rateSettings)
       .set(settings)
       .where(eq(rateSettings.id, id))
       .returning();
@@ -146,22 +157,22 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
   // Media Items
   async getMediaItems(activeOnly = false): Promise<MediaItem[]> {
     if (activeOnly) {
-      return await db.select().from(mediaItems)
+      return await getDb().select().from(mediaItems)
         .where(eq(mediaItems.is_active, true))
         .orderBy(asc(mediaItems.order_index));
     }
-    
-    return await db.select().from(mediaItems)
+
+    return await getDb().select().from(mediaItems)
       .orderBy(asc(mediaItems.order_index));
   }
 
   async createMediaItem(item: InsertMediaItem): Promise<MediaItem> {
-    const result = await db.insert(mediaItems).values(item).returning();
+    const result = await getDb().insert(mediaItems).values(item).returning();
     return result[0];
   }
 
   async updateMediaItem(id: number, item: Partial<InsertMediaItem>): Promise<MediaItem | undefined> {
-    const result = await db.update(mediaItems)
+    const result = await getDb().update(mediaItems)
       .set(item)
       .where(eq(mediaItems.id, id))
       .returning();
@@ -169,29 +180,29 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
   }
 
   async deleteMediaItem(id: number): Promise<boolean> {
-    const result = await db.delete(mediaItems).where(eq(mediaItems.id, id)).returning();
+    const result = await getDb().delete(mediaItems).where(eq(mediaItems.id, id)).returning();
     return result.length > 0;
   }
 
   // Promo Images
   async getPromoImages(activeOnly = false): Promise<PromoImage[]> {
     if (activeOnly) {
-      return await db.select().from(promoImages)
+      return await getDb().select().from(promoImages)
         .where(eq(promoImages.is_active, true))
         .orderBy(asc(promoImages.order_index));
     }
-    
-    return await db.select().from(promoImages)
+
+    return await getDb().select().from(promoImages)
       .orderBy(asc(promoImages.order_index));
   }
 
   async createPromoImage(image: InsertPromoImage): Promise<PromoImage> {
-    const result = await db.insert(promoImages).values(image).returning();
+    const result = await getDb().insert(promoImages).values(image).returning();
     return result[0];
   }
 
   async updatePromoImage(id: number, image: Partial<InsertPromoImage>): Promise<PromoImage | undefined> {
-    const result = await db.update(promoImages)
+    const result = await getDb().update(promoImages)
       .set(image)
       .where(eq(promoImages.id, id))
       .returning();
@@ -199,13 +210,13 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
   }
 
   async deletePromoImage(id: number): Promise<boolean> {
-    const result = await db.delete(promoImages).where(eq(promoImages.id, id)).returning();
+    const result = await getDb().delete(promoImages).where(eq(promoImages.id, id)).returning();
     return result.length > 0;
   }
 
   // Banner Settings
   async getBannerSettings(): Promise<BannerSettings | undefined> {
-    const banner = await db.select().from(bannerSettings)
+    const banner = await getDb().select().from(bannerSettings)
       .where(eq(bannerSettings.is_active, true))
       .orderBy(desc(bannerSettings.created_date))
       .limit(1);
@@ -213,12 +224,12 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
   }
 
   async createBannerSettings(banner: InsertBannerSettings): Promise<BannerSettings> {
-    const result = await db.insert(bannerSettings).values(banner).returning();
+    const result = await getDb().insert(bannerSettings).values(banner).returning();
     return result[0];
   }
 
   async updateBannerSettings(id: number, banner: Partial<InsertBannerSettings>): Promise<BannerSettings | undefined> {
-    const result = await db.update(bannerSettings)
+    const result = await getDb().update(bannerSettings)
       .set(banner)
       .where(eq(bannerSettings.id, id))
       .returning();
