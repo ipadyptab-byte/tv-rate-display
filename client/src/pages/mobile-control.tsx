@@ -94,6 +94,12 @@ export default function MobileControl() {
         description: `Failed to update rates: ${error.message}`,
         variant: "destructive"
       });
+
+      // Helpful debugging info in browser console on Vercel
+      fetch("/api/health")
+        .then((r) => r.json())
+        .then((j) => console.log("/api/health", j))
+        .catch((e) => console.log("/api/health failed", e));
     }
   });
 
