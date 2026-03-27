@@ -148,11 +148,36 @@ export async function registerRoutes(app: Express): Promise<void> {
   });
 
   // Gold Rates Routes
-  app.get("/api/rates/current", async (req, res) => {
+  app.get("/api/rates/current", async (_req, res) => {
     try {
       const rates = await storage.getCurrentRates();
-      res.json(rates || null);
-    } catch (error) {
+      if (!rates) return res.json(null);
+
+      // Repair older rows where *_purchase columns may be null.
+      const calc = await storage.getRateSettings();
+      const perc_24k_purchase = calc?.perc_24k_purchase ?? 0.985;
+      const perc_22k_purchase = calc?.perc_22k_purchase ?? 0.90;
+      const perc_18k_purchase = calc?.perc_18k_purchase ?? 0.80;
+      const silver_purchase_offset = calc?.silver_purchase_offset ?? -5000;
+
+      const round10 = (n: number) => Math.round(n / 10) * 10;
+
+      const repaired: Partial<import("@shared/schema").InsertGoldRate> = {};
+      if (rates.gold_24k_purchase == null) repaired.gold_24k_purchase = round10(rates.gold_24k_sale * perc_24k_purchase);
+      if (rates.gold_22k_purchase == null) repaired.gold_22k_purchase = round10(rates.gold_24k_sale * perc_22k_purchase);
+      if (rates.gold_18k_purchase == null) repaired.gold_18k_purchase = round10(rates.gold_24k_sale * perc_18k_purchase);
+      if (rates.silver_per_kg_purchase == null) repaired.silver_per_kg_purchase = round10(rates.silver_per_kg_sale + silver_purchase_offset);
+
+      if (Object.keys(repaired).length > 0) {
+        const updated = await storage.updateGoldRate(rates.id, repaired);
+        return res.json(updated || {
+          ...rates,
+          ...repaired,
+        });
+      }
+
+      res.json(rates);
+    } catch (_error) {
       res.status(500).json({ message: "Failed to fetch current rates" });
     }
   });
