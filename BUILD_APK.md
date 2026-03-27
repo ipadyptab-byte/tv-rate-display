@@ -7,7 +7,7 @@ By default, the Android app **bundles the built web pages** (so you can navigate
 ## Prerequisites
 
 - Node.js 18+ and npm
-- Java JDK 17 (match Android Gradle Plugin requirements)
+- Java JDK 17 (recommended). If Android Studio is using Java 21, ensure Gradle/AGP are upgraded (this repo uses Gradle 8.7 + AGP 8.5.2).
 - Android Studio (latest), with SDK Platform and Build Tools installed
 - A running PostgreSQL database (for the server API)
 - Open network access to your server (or run server on the same device/emulator)
