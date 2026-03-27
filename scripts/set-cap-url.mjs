@@ -1,30 +1,19 @@
-import fs from "fs";
+import type { CapacitorConfig } from "@capacitor/cli";
 
-const url = process.argv[2];
-if (!url) {
-  console.error("Usage: node scripts/set-cap-url.mjs <url>");
-  console.error("Example: node scripts/set-cap-url.mjs http://192.168.1.100:3000");
-  process.exit(1);
-}
+const config: CapacitorConfig = {
+  appId: "com.example.goldrates",
+  appName: "GoldRatesApp",
+  webDir: "dist/public",
+  bundledWebRuntime: false,
+  // By default the Android app loads the bundled web assets from webDir.
+  // Use `npm run android:env:public` (or `node scripts/set-cap-url.mjs <url>`) to
+  // point the app at a remote server for live content.
+  server: {
+    cleartext: true
+  },
+  android: {
+    allowMixedContent: true
+  }
+};
 
-const cfgPath = "capacitor.config.ts";
-if (!fs.existsSync(cfgPath)) {
-  console.error("capacitor.config.ts not found. Did you run npm run android:init?");
-  process.exit(1);
-}
-
-let src = fs.readFileSync(cfgPath, "utf8");
-
-// Replace existing url: "..." inside server: { ... }
-if (src.includes("server:")) {
-  src = src.replace(/url:\s*\"[^\"]*\"/, `url: "${url}"`);
-} else {
-  // Insert a server block if missing (very unlikely in this project)
-  src = src.replace(
-    /const config: CapacitorConfig = \{/,
-    `const config: CapacitorConfig = {\n  server: { url: "${url}", cleartext: true },`
-  );
-}
-
-fs.writeFileSync(cfgPath, src, "utf8");
-console.log(`Updated capacitor.config.ts server.url -> ${url}`);
+export default config;
