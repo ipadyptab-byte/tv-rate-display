@@ -1,0 +1,423 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Roboto:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Base Colors */
+  --background: hsl(45, 100%, 97%);
+  --foreground: hsl(224, 71%, 4%);
+  --card: hsl(45, 84%, 95%);
+  --card-foreground: hsl(224, 71%, 4%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(224, 71%, 4%);
+  
+  /* Brand Colors - Jewelry Theme */
+  --primary: hsl(280, 100%, 32%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(280, 67%, 45%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  
+  /* Gold Colors */
+  --gold-50: hsl(45, 100%, 97%);
+  --gold-100: hsl(45, 100%, 95%);
+  --gold-200: hsl(43, 100%, 85%);
+  --gold-300: hsl(42, 100%, 75%);
+  --gold-400: hsl(41, 100%, 69%);
+  --gold-500: hsl(42, 100%, 50%);
+  --gold-600: hsl(38, 100%, 56%);
+  --gold-700: hsl(33, 100%, 50%);
+  --gold-800: hsl(28, 100%, 50%);
+  --gold-900: hsl(16, 100%, 45%);
+  
+  /* Jewelry Brand Colors */
+  --jewelry-primary: hsl(280, 100%, 32%);
+  --jewelry-secondary: hsl(280, 67%, 45%);
+  --jewelry-accent: hsl(140, 100%, 35%);
+  
+  /* Utility Colors */
+  --muted: hsl(210, 40%, 92%);
+  --muted-foreground: hsl(215, 16%, 46%);
+  --accent: hsl(210, 40%, 92%);
+  --accent-foreground: hsl(222, 84%, 4%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --border: hsl(214, 32%, 91%);
+  --input: hsl(214, 32%, 91%);
+  --ring: hsl(280, 100%, 32%);
+  
+  /* Chart Colors */
+  --chart-1: hsl(280, 100%, 32%);
+  --chart-2: hsl(140, 100%, 35%);
+  --chart-3: hsl(42, 100%, 50%);
+  --chart-4: hsl(33, 100%, 50%);
+  --chart-5: hsl(16, 100%, 45%);
+  
+  /* Sidebar Colors */
+  --sidebar: hsl(45, 84%, 95%);
+  --sidebar-foreground: hsl(224, 71%, 4%);
+  --sidebar-primary: hsl(280, 100%, 32%);
+  --sidebar-primary-foreground: hsl(0, 0%, 100%);
+  --sidebar-accent: hsl(210, 40%, 92%);
+  --sidebar-accent-foreground: hsl(222, 84%, 4%);
+  --sidebar-border: hsl(214, 32%, 91%);
+  --sidebar-ring: hsl(280, 100%, 32%);
+  
+  /* Typography */
+  --font-sans: 'Open Sans', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+  --font-mono: 'Roboto Mono', monospace;
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Roboto', sans-serif;
+  
+  /* Border Radius */
+  --radius: 0.75rem;
+  
+  /* Shadows */
+  --shadow-2xs: 0px 1px 2px 0px hsl(0, 0%, 0%, 0.05);
+  --shadow-xs: 0px 1px 3px 0px hsl(0, 0%, 0%, 0.1), 0px 1px 2px 0px hsl(0, 0%, 0%, 0.06);
+  --shadow-sm: 0px 1px 3px 0px hsl(0, 0%, 0%, 0.1), 0px 1px 2px 0px hsl(0, 0%, 0%, 0.06);
+  --shadow: 0px 1px 3px 0px hsl(0, 0%, 0%, 0.1), 0px 1px 2px 0px hsl(0, 0%, 0%, 0.06);
+  --shadow-md: 0px 4px 6px -1px hsl(0, 0%, 0%, 0.1), 0px 2px 4px -1px hsl(0, 0%, 0%, 0.06);
+  --shadow-lg: 0px 10px 15px -3px hsl(0, 0%, 0%, 0.1), 0px 4px 6px -2px hsl(0, 0%, 0%, 0.05);
+  --shadow-xl: 0px 20px 25px -5px hsl(0, 0%, 0%, 0.1), 0px 10px 10px -5px hsl(0, 0%, 0%, 0.04);
+  --shadow-2xl: 0px 25px 50px -12px hsl(0, 0%, 0%, 0.25);
+  
+  /* Spacing */
+  --spacing: 0.25rem;
+}
+
+.dark {
+  --background: hsl(224, 71%, 4%);
+  --foreground: hsl(213, 31%, 91%);
+  --card: hsl(224, 71%, 6%);
+  --card-foreground: hsl(213, 31%, 91%);
+  --popover: hsl(224, 71%, 4%);
+  --popover-foreground: hsl(213, 31%, 91%);
+  --primary: hsl(280, 100%, 50%);
+  --primary-foreground: hsl(0, 0%, 0%);
+  --secondary: hsl(215, 27%, 16%);
+  --secondary-foreground: hsl(210, 40%, 98%);
+  --muted: hsl(215, 27%, 16%);
+  --muted-foreground: hsl(217, 10%, 64%);
+  --accent: hsl(215, 27%, 16%);
+  --accent-foreground: hsl(210, 40%, 98%);
+  --destructive: hsl(0, 62%, 30%);
+  --destructive-foreground: hsl(0, 85%, 97%);
+  --border: hsl(215, 27%, 16%);
+  --input: hsl(215, 27%, 16%);
+  --ring: hsl(280, 100%, 50%);
+}
+
+/* Responsive text utilities */
+@media (max-width: 768px) {
+  .text-sm-2xl { font-size: 1.5rem; line-height: 2rem; }
+  .text-sm-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+  .text-sm-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+  .text-sm-5xl { font-size: 3rem; line-height: 1; }
+  .text-sm-6xl { font-size: 3.75rem; line-height: 1; }
+}
+
+@media (max-width: 1024px) {
+  .text-md-2xl { font-size: 1.5rem; line-height: 2rem; }
+  .text-md-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+  .text-md-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+  .text-md-5xl { font-size: 3rem; line-height: 1; }
+  .text-md-6xl { font-size: 3.75rem; line-height: 1; }
+}
+
+/* Ensure proper video playback on mobile */
+video {
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+}
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
+  }
+}
+
+@layer components {
+  /* Custom animations for jewelry store */
+  .gold-shimmer {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(45deg, #FFD700, #FFC107, #FFD700);
+  }
+  
+  @keyframes shimmer {
+    0%, 100% { 
+      transform: scale(1); 
+      opacity: 0.8; 
+    }
+    50% { 
+      transform: scale(1.1); 
+      opacity: 1; 
+    }
+  }
+  
+  .rate-card {
+    transition: all 0.3s ease;
+  }
+  
+  .rate-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.8s ease-in;
+  }
+  
+  @keyframes fadeIn {
+    from { 
+      opacity: 0; 
+      transform: translateY(20px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+
+  .tv-display {
+    background: linear-gradient(135deg, var(--gold-50) 0%, var(--gold-100) 100%);
+  }
+
+  .mobile-nav {
+    background: linear-gradient(135deg, var(--jewelry-primary) 0%, var(--jewelry-secondary) 100%);
+  }
+
+  /* Loading spinner */
+  .spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--jewelry-primary);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Professional button styles */
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold-500) 0%, var(--gold-600) 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-gold:hover {
+    background: linear-gradient(135deg, var(--gold-600) 0%, var(--gold-700) 100%);
+    box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+  }
+
+  .btn-jewelry {
+    background: linear-gradient(135deg, var(--jewelry-primary) 0%, var(--jewelry-secondary) 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+
+  .btn-jewelry:hover {
+    background: linear-gradient(135deg, var(--jewelry-secondary) 0%, var(--jewelry-primary) 100%);
+    box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+  }
+
+  /* Form input focus styles */
+  .form-input:focus {
+    border-color: var(--jewelry-primary);
+    box-shadow: 0 0 0 3px hsla(280, 100%, 32%, 0.1);
+  }
+
+  /* Card hover effects */
+  .card-hover {
+    transition: all 0.3s ease;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  /* Status indicators */
+  .status-online {
+    color: var(--jewelry-accent);
+  }
+
+  .status-offline {
+    color: var(--destructive);
+  }
+
+  /* Mobile responsive utilities */
+  @media (max-width: 768px) {
+    .mobile-hidden {
+      display: none;
+    }
+    
+    .mobile-full {
+      width: 100%;
+    }
+    
+    .mobile-padding {
+      padding: 1rem;
+    }
+  }
+
+  /* TV display specific styles */
+  .tv-fullscreen {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .tv-rates-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    height: 100%;
+    padding: 2rem;
+  }
+
+  @media (orientation: portrait) {
+    .tv-rates-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+
+  /* Print styles for documentation */
+  @media print {
+    .no-print {
+      display: none;
+    }
+    
+    .print-friendly {
+      background: white !important;
+      color: black !important;
+      box-shadow: none !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Text utilities */
+  .text-jewelry-primary {
+    color: var(--jewelry-primary);
+  }
+
+  .text-jewelry-secondary {
+    color: var(--jewelry-secondary);
+  }
+
+  .text-jewelry-accent {
+    color: var(--jewelry-accent);
+  }
+
+  .text-gold-500 {
+    color: var(--gold-500);
+  }
+
+  .text-gold-600 {
+    color: var(--gold-600);
+  }
+
+  .text-gold-700 {
+    color: var(--gold-700);
+  }
+
+  /* Background utilities */
+  .bg-jewelry-primary {
+    background-color: var(--jewelry-primary);
+  }
+
+  .bg-jewelry-secondary {
+    background-color: var(--jewelry-secondary);
+  }
+
+  .bg-jewelry-accent {
+    background-color: var(--jewelry-accent);
+  }
+
+  .bg-gold-50 {
+    background-color: var(--gold-50);
+  }
+
+  .bg-gold-100 {
+    background-color: var(--gold-100);
+  }
+
+  .bg-gold-500 {
+    background-color: var(--gold-500);
+  }
+
+  .bg-gold-600 {
+    background-color: var(--gold-600);
+  }
+
+  .bg-gold-700 {
+    background-color: var(--gold-700);
+  }
+
+  /* Border utilities */
+  .border-jewelry-primary {
+    border-color: var(--jewelry-primary);
+  }
+
+  .border-jewelry-accent {
+    border-color: var(--jewelry-accent);
+  }
+
+  .border-gold-500 {
+    border-color: var(--gold-500);
+  }
+
+  /* Shadow utilities */
+  .shadow-jewelry {
+    box-shadow: 0 10px 15px -3px hsla(280, 100%, 32%, 0.1), 0 4px 6px -2px hsla(280, 100%, 32%, 0.05);
+  }
+
+  .shadow-gold {
+    box-shadow: 0 10px 15px -3px hsla(42, 100%, 50%, 0.1), 0 4px 6px -2px hsla(42, 100%, 50%, 0.05);
+  }
+}

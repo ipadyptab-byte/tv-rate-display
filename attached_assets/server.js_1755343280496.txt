@@ -1,0 +1,192 @@
+// server.js
+import express from "express";
+import cors from "cors";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
+import Database from "better-sqlite3";
+
+const PORT = 8000;
+const STORAGE_DIR = path.join(process.cwd(), "storage", "public");
+const DB_PATH = path.join(process.cwd(), "database.sqlite");
+
+// ensure storage dir exists
+fs.mkdirSync(STORAGE_DIR, { recursive: true });
+
+// --- multer setup (store uploaded files in storage/public with timestamped filenames) ---
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, STORAGE_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const base = path.basename(file.originalname, ext).replace(/\s+/g, "_");
+    const filename = `${Date.now()}_${base}${ext}`;
+    cb(null, filename);
+  },
+});
+const upload = multer({ storage });
+
+// --- setup DB (better-sqlite3) ---
+const db = new Database(DB_PATH);
+db.pragma("journal_mode = WAL");
+
+// Create tables if not exist. We store the entity payload JSON in `data` column.
+db.exec(`
+CREATE TABLE IF NOT EXISTS goldrate (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  data TEXT NOT NULL,
+  created_date INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+);
+
+CREATE TABLE IF NOT EXISTS mediaitem (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  data TEXT NOT NULL,
+  created_date INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+);
+
+CREATE TABLE IF NOT EXISTS displaysettings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  data TEXT NOT NULL,
+  created_date INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+);
+
+CREATE TABLE IF NOT EXISTS bannersettings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  data TEXT NOT NULL,
+  created_date INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+);
+`);
+
+// Helper to convert DB row -> JSON object with top-level fields merged
+function rowToObject(row) {
+  if (!row) return null;
+  let parsed = {};
+  try {
+    parsed = JSON.parse(row.data);
+  } catch (e) {
+    parsed = {};
+  }
+  // merge meta fields
+  parsed.id = row.id;
+  parsed.created_date = row.created_date;
+  return parsed;
+}
+
+// Generic CRUD helpers
+function createEntityRoutes(entityName) {
+  const table = entityName;
+
+  // GET /api/entity?sort=-created_date&limit=10
+  app.get(`/api/${table}`, (req, res) => {
+    const sort = req.query.sort || "-created_date";
+    const limit = req.query.limit ? Number(req.query.limit) : null;
+
+    // map sort key -> SQL
+    let orderBy = "created_date DESC";
+    if (sort) {
+      const desc = sort.startsWith("-");
+      const key = desc ? sort.substring(1) : sort;
+      if (key === "created_date") orderBy = `created_date ${desc ? "DESC" : "ASC"}`;
+      else {
+        // attempt ordering by JSON field: JSON_EXTRACT(data, '$.<key>')
+        orderBy = `JSON_EXTRACT(data, '$.${key}') ${desc ? "DESC" : "ASC"}`;
+      }
+    }
+
+    const limitClause = limit ? `LIMIT ${limit}` : "";
+    const stmt = db.prepare(`SELECT * FROM ${table} ORDER BY ${orderBy} ${limitClause}`);
+    const rows = stmt.all();
+    res.json(rows.map(rowToObject));
+  });
+
+  // POST /api/entity/filter - body contains filter object; support equality checks
+  app.post(`/api/${table}/filter`, (req, res) => {
+    const filters = req.body || {};
+    const sort = req.query.sort;
+    const limit = req.query.limit ? Number(req.query.limit) : null;
+
+    const whereParts = [];
+    const values = [];
+
+    for (const [k, v] of Object.entries(filters)) {
+      // use JSON_EXTRACT to compare JSON field value (works for strings/numbers/booleans)
+      whereParts.push(`JSON_EXTRACT(data, '$.${k}') = ?`);
+      // store primitives as-is; booleans become 1/0 in JSON_EXTRACT comparisons if DB stores them accordingly
+      values.push(typeof v === "boolean" ? (v ? 1 : 0) : v);
+    }
+
+    let sql = `SELECT * FROM ${table}`;
+    if (whereParts.length) sql += ` WHERE ` + whereParts.join(" AND ");
+
+    if (sort) {
+      const desc = sort.startsWith("-");
+      const key = desc ? sort.substring(1) : sort;
+      if (key === "created_date") sql += ` ORDER BY created_date ${desc ? "DESC" : "ASC"}`;
+      else sql += ` ORDER BY JSON_EXTRACT(data, '$.${key}') ${desc ? "DESC" : "ASC"}`;
+    }
+
+    if (limit) sql += ` LIMIT ${limit}`;
+
+    const stmt = db.prepare(sql);
+    const rows = stmt.all(...values);
+    res.json(rows.map(rowToObject));
+  });
+
+  // POST /api/entity
+  app.post(`/api/${table}`, (req, res) => {
+    const payload = req.body || {};
+    const dataText = JSON.stringify(payload);
+    const stmt = db.prepare(`INSERT INTO ${table} (data) VALUES (?)`);
+    const info = stmt.run(dataText);
+    const row = db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(info.lastInsertRowid);
+    res.json(rowToObject(row));
+  });
+
+  // PUT /api/entity/:id
+  app.put(`/api/${table}/:id`, (req, res) => {
+    const id = Number(req.params.id);
+    const existing = db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(id);
+    if (!existing) return res.status(404).send("Not found");
+
+    // merge existing data with updates
+    const current = JSON.parse(existing.data || "{}");
+    const updated = { ...current, ...(req.body || {}) };
+    const dataText = JSON.stringify(updated);
+    db.prepare(`UPDATE ${table} SET data = ? WHERE id = ?`).run(dataText, id);
+    const row = db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(id);
+    res.json(rowToObject(row));
+  });
+
+  // DELETE /api/entity/:id
+  app.delete(`/api/${table}/:id`, (req, res) => {
+    const id = Number(req.params.id);
+    db.prepare(`DELETE FROM ${table} WHERE id = ?`).run(id);
+    res.json({ success: true });
+  });
+}
+
+// --- Express app setup ---
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// serve uploaded files
+app.use("/storage/public", express.static(STORAGE_DIR));
+
+// upload endpoint (returns { file_url })
+app.post("/api/upload", upload.single("file"), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+  const fileUrl = `http://localhost:${PORT}/storage/public/${req.file.filename}`;
+  res.json({ file_url: fileUrl });
+});
+
+// create routes for entities
+createEntityRoutes("goldrate");
+createEntityRoutes("mediaitem");
+createEntityRoutes("displaysettings");
+createEntityRoutes("bannersettings");
+
+// start server
+app.listen(PORT, () => {
+  console.log(`✅ API running at http://localhost:${PORT}`);
+  console.log(`✅ Uploaded files served from http://localhost:${PORT}/storage/public/<filename>`);
+});

@@ -1,0 +1,42 @@
+{
+  "name": "MediaItem",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the media item"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL of the uploaded media file"
+    },
+    "media_type": {
+      "type": "string",
+      "enum": [
+        "image",
+        "video"
+      ],
+      "description": "Type of media"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "default": 30,
+      "description": "Duration to show this media in seconds"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this media is active in rotation"
+    },
+    "order_index": {
+      "type": "number",
+      "default": 0,
+      "description": "Display order"
+    }
+  },
+  "required": [
+    "name",
+    "file_url",
+    "media_type"
+  ]
+}

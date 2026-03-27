@@ -1,0 +1,59 @@
+{
+  "name": "DisplaySettings",
+  "type": "object",
+  "properties": {
+    "orientation": {
+      "type": "string",
+      "enum": [
+        "horizontal",
+        "vertical"
+      ],
+      "default": "horizontal",
+      "description": "TV display orientation"
+    },
+    "background_color": {
+      "type": "string",
+      "default": "#f8f9fa",
+      "description": "Background color for display"
+    },
+    "text_color": {
+      "type": "string",
+      "default": "#212529",
+      "description": "Text color for rates"
+    },
+    "accent_color": {
+      "type": "string",
+      "default": "#dc3545",
+      "description": "Accent color for branding"
+    },
+    "refresh_interval_seconds": {
+      "type": "number",
+      "default": 30,
+      "description": "How often to refresh rates in seconds"
+    },
+    "show_media": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to show media rotation"
+    },
+    "rates_display_duration": {
+      "type": "number",
+      "default": 15,
+      "description": "How long to show rates before switching to media"
+    },
+    "rate_number_font_size": {
+      "type": "string",
+      "enum": [
+        "text-2xl",
+        "text-3xl",
+        "text-4xl",
+        "text-5xl",
+        "text-6xl",
+        "text-7xl"
+      ],
+      "default": "text-4xl",
+      "description": "Font size for rate numbers only"
+    }
+  },
+  "required": []
+}

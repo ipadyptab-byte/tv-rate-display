@@ -1,0 +1,245 @@
+
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Tv, Smartphone, Settings, Image, TrendingUp } from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarHeader,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+
+const navigationItems = [
+  {
+    title: "TV Display",
+    url: createPageUrl("TVDisplay"),
+    icon: Tv,
+    description: "Main TV Screen"
+  },
+  {
+    title: "Mobile Control",
+    url: createPageUrl("MobileControl"),
+    icon: Smartphone,
+    description: "Manage Rates & Media"
+  },
+  {
+    title: "Media Manager",
+    url: createPageUrl("MediaManager"),
+    icon: Image,
+    description: "Upload Images & Videos"
+  },
+  {
+    title: "Promo Manager",
+    url: createPageUrl("PromoManager"),
+    icon: Image,
+    description: "Promotional Slideshow"
+  },
+  {
+    title: "Settings",
+    url: createPageUrl("Settings"),
+    icon: Settings,
+    description: "Display Configuration"
+  },
+];
+
+export default function Layout({ children, currentPageName }) {
+  const location = useLocation();
+  const isTVDisplay = currentPageName === "TVDisplay";
+
+  return (
+    <SidebarProvider defaultOpen={!isTVDisplay}>
+      <style>{`
+        :root {
+          --brand-primary: #dc2626;
+          --brand-secondary: #7c3aed;
+          --brand-gold: #f59e0b;
+          --brand-dark: #1f2937;
+        }
+        
+        .brand-gradient {
+          background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+        }
+        
+        .gold-shimmer {
+          background: linear-gradient(45deg, #f59e0b, #fbbf24, #f59e0b);
+          background-size: 200% 200%;
+          animation: shimmer 3s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        
+        .smooth-transition {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .tv-sidebar-trigger {
+          position: fixed;
+          top: 20px;
+          left: 20px;
+          z-index: 50;
+          background: rgba(0, 0, 0, 0.5);
+          color: white;
+          border: none;
+          border-radius: 12px;
+          padding: 12px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          backdrop-filter: blur(10px);
+        }
+
+        .tv-sidebar-trigger:hover {
+          background: rgba(0, 0, 0, 0.7);
+          transform: scale(1.05);
+        }
+
+        .tv-display-layout {
+          width: 100vw;
+          height: 100vh;
+          overflow: hidden;
+        }
+      `}</style>
+      
+      <div className={`min-h-screen flex w-full ${isTVDisplay ? 'tv-display-layout bg-black' : 'bg-gradient-to-br from-gray-50 to-gray-100'}`}>
+        {!isTVDisplay && (
+          <Sidebar className="border-r border-gray-200 shadow-lg">
+            <SidebarHeader className="border-b border-gray-200 p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 brand-gradient rounded-xl flex items-center justify-center shadow-lg">
+                  <TrendingUp className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-xl text-gray-900">देवी ज्वेलर्स</h2>
+                  <p className="text-sm text-gray-600">Gold Rates Display System</p>
+                </div>
+              </div>
+            </SidebarHeader>
+            
+            <SidebarContent className="p-4">
+              <SidebarGroup>
+                <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  Navigation
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu className="space-y-2">
+                    {navigationItems.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton 
+                          asChild 
+                          className={`smooth-transition rounded-xl p-4 hover:bg-gradient-to-r hover:from-red-50 hover:to-purple-50 hover:shadow-md ${
+                            location.pathname === item.url 
+                              ? 'bg-gradient-to-r from-red-50 to-purple-50 border border-red-200 shadow-md' 
+                              : ''
+                          }`}
+                        >
+                          <Link to={item.url} className="flex items-start gap-4">
+                            <div className={`p-2 rounded-lg ${
+                              location.pathname === item.url 
+                                ? 'brand-gradient text-white' 
+                                : 'bg-gray-100 text-gray-600'
+                            }`}>
+                              <item.icon className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <span className="font-semibold text-gray-900">{item.title}</span>
+                              <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+                            </div>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+          </Sidebar>
+        )}
+
+        {isTVDisplay && (
+          <Sidebar className="border-r border-gray-700 shadow-2xl bg-gray-900">
+            <SidebarHeader className="border-b border-gray-700 p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 brand-gradient rounded-xl flex items-center justify-center shadow-lg">
+                  <TrendingUp className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-xl text-white">देवी ज्वेलर्स</h2>
+                  <p className="text-sm text-gray-400">Gold Rates Display System</p>
+                </div>
+              </div>
+            </SidebarHeader>
+            
+            <SidebarContent className="p-4">
+              <SidebarGroup>
+                <SidebarGroupLabel className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                  Navigation
+                </SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu className="space-y-2">
+                    {navigationItems.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton 
+                          asChild 
+                          className={`smooth-transition rounded-xl p-4 hover:bg-gray-800 hover:shadow-md text-gray-300 hover:text-white ${
+                            location.pathname === item.url 
+                              ? 'bg-gray-800 border border-gray-600 shadow-md text-white' 
+                              : ''
+                          }`}
+                        >
+                          <Link to={item.url} className="flex items-start gap-4">
+                            <div className={`p-2 rounded-lg ${
+                              location.pathname === item.url 
+                                ? 'brand-gradient text-white' 
+                                : 'bg-gray-700 text-gray-400'
+                            }`}>
+                              <item.icon className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <span className="font-semibold">{item.title}</span>
+                              <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+                            </div>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+          </Sidebar>
+        )}
+
+        <main className="flex-1 flex flex-col">
+          {!isTVDisplay && (
+            <header className="bg-white border-b border-gray-200 px-6 py-4 md:hidden shadow-sm">
+              <div className="flex items-center gap-4">
+                <SidebarTrigger className="hover:bg-gray-100 p-2 rounded-lg smooth-transition" />
+                <h1 className="text-xl font-bold text-gray-900">देवी ज्वेलर्स</h1>
+              </div>
+            </header>
+          )}
+
+          {isTVDisplay && (
+            <SidebarTrigger className="tv-sidebar-trigger">
+              <TrendingUp className="w-6 h-6" />
+            </SidebarTrigger>
+          )}
+
+          <div className="flex-1 overflow-auto">
+            {children}
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
+  );
+}

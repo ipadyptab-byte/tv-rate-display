@@ -1,0 +1,53 @@
+{
+  "name": "GoldRate",
+  "type": "object",
+  "properties": {
+    "gold_24k_sale": {
+      "type": "number",
+      "description": "Gold 24K sale rate per 10gms"
+    },
+    "gold_24k_purchase": {
+      "type": "number",
+      "description": "Gold 24K purchase rate per 10gms"
+    },
+    "gold_22k_sale": {
+      "type": "number",
+      "description": "Gold 22K sale rate per 10gms"
+    },
+    "gold_22k_purchase": {
+      "type": "number",
+      "description": "Gold 22K purchase rate per 10gms"
+    },
+    "gold_18k_sale": {
+      "type": "number",
+      "description": "Gold 18K sale rate per 10gms"
+    },
+    "gold_18k_purchase": {
+      "type": "number",
+      "description": "Gold 18K purchase rate per 10gms"
+    },
+    "silver_per_kg_sale": {
+      "type": "number",
+      "description": "Silver sale rate per kg"
+    },
+    "silver_per_kg_purchase": {
+      "type": "number",
+      "description": "Silver purchase rate per kg"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this rate is currently active"
+    }
+  },
+  "required": [
+    "gold_24k_sale",
+    "gold_24k_purchase",
+    "gold_22k_sale",
+    "gold_22k_purchase",
+    "gold_18k_sale",
+    "gold_18k_purchase",
+    "silver_per_kg_sale",
+    "silver_per_kg_purchase"
+  ]
+}

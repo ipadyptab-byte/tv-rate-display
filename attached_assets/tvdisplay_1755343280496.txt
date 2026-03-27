@@ -1,0 +1,367 @@
+import React, { useState, useEffect } from "react";
+import { GoldRate, MediaItem, DisplaySettings, BannerSettings, PromoImage } from "@/entities/all";
+import { format } from "date-fns";
+import { motion, AnimatePresence } from "framer-motion";
+
+export default function TVDisplay() {
+  const [currentRates, setCurrentRates] = useState(null);
+  const [mediaItems, setMediaItems] = useState([]);
+  const [settings, setSettings] = useState(null);
+  const [bannerSettings, setBannerSettings] = useState(null);
+  const [promoImages, setPromoImages] = useState([]);
+  const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [showingRates, setShowingRates] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Effect to load all data initially and then periodically refresh
+  useEffect(() => {
+    const loadAllData = async () => {
+      try {
+        const [rates, media, displaySettings, banner, promo] = await Promise.all([
+          GoldRate.filter({ is_active: true }, "-created_date", 1),
+          MediaItem.filter({ is_active: true }, "order_index", 50),
+          DisplaySettings.list("-created_date", 1),
+          BannerSettings.filter({ is_active: true }, "-created_date", 1),
+          PromoImage.filter({ is_active: true }, "order_index", 50)
+        ]);
+        
+        setCurrentRates(rates[0] || null);
+        setMediaItems(media || []);
+        setSettings(displaySettings[0] || {});
+        setBannerSettings(banner[0] || null);
+        setPromoImages(promo || []);
+      } catch (error) {
+        console.error("Error loading data:", error);
+      }
+    };
+
+    // Initial load
+    loadAllData();
+
+    // Set up periodic refresh - every 30 seconds to catch updates from other devices
+    const refreshInterval = setInterval(loadAllData, 30000);
+
+    return () => clearInterval(refreshInterval);
+  }, []);
+
+  // Effect for the live clock
+  useEffect(() => {
+    const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timeInterval);
+  }, []);
+
+  // Effect for rotating between rates and media
+  useEffect(() => {
+    if (!settings?.show_media || mediaItems.length === 0) return;
+
+    const ratesDisplayTime = (settings?.rates_display_duration || 15) * 1000;
+    const currentMedia = mediaItems[currentMediaIndex];
+    const mediaDisplayTime = (currentMedia?.duration_seconds || 30) * 1000;
+
+    const interval = setInterval(() => {
+      if (showingRates) {
+        setShowingRates(false);
+      } else {
+        setCurrentMediaIndex((prev) => (prev + 1) % mediaItems.length);
+        setShowingRates(true);
+      }
+    }, showingRates ? ratesDisplayTime : mediaDisplayTime);
+
+    return () => clearInterval(interval);
+  }, [showingRates, currentMediaIndex, mediaItems, settings]);
+
+  // Effect for the promotional image slideshow
+  useEffect(() => {
+    if (promoImages.length <= 1) return;
+
+    const currentPromo = promoImages[currentPromoIndex];
+    const duration = (currentPromo?.duration_seconds || 5) * 1000;
+
+    const interval = setInterval(() => {
+      setCurrentPromoIndex((prev) => (prev + 1) % promoImages.length);
+    }, duration);
+
+    return () => clearInterval(interval);
+  }, [currentPromoIndex, promoImages]);
+
+  // Reset media/promo indices when arrays change to prevent out-of-bounds
+  useEffect(() => {
+    if (mediaItems.length > 0 && currentMediaIndex >= mediaItems.length) {
+      setCurrentMediaIndex(0);
+    }
+  }, [mediaItems, currentMediaIndex]);
+
+  useEffect(() => {
+    if (promoImages.length > 0 && currentPromoIndex >= promoImages.length) {
+      setCurrentPromoIndex(0);
+    }
+  }, [promoImages, currentPromoIndex]);
+
+  const isVertical = settings?.orientation === "vertical";
+  const currentPromo = promoImages[currentPromoIndex];
+  const rateFontSize = settings?.rate_number_font_size || "text-4xl";
+
+  const getAnimationVariants = (effect) => {
+    const transitions = {
+      fade: { initial: { opacity: 0 }, animate: { opacity: 1 }, exit: { opacity: 0 } },
+      'slide-left': { initial: { x: '100%' }, animate: { x: 0 }, exit: { x: '-100%' } },
+      'slide-right': { initial: { x: '-100%' }, animate: { x: 0 }, exit: { x: '100%' } },
+      'zoom-in': { initial: { scale: 0.8, opacity: 0 }, animate: { scale: 1, opacity: 1 }, exit: { scale: 0.8, opacity: 0 } },
+      'zoom-out': { initial: { scale: 1.2, opacity: 0 }, animate: { scale: 1, opacity: 1 }, exit: { scale: 1.2, opacity: 0 } },
+      'flip-x': { initial: { rotateX: -90, opacity: 0 }, animate: { rotateX: 0, opacity: 1 }, exit: { rotateX: 90, opacity: 0 } },
+      'flip-y': { initial: { rotateY: -90, opacity: 0 }, animate: { rotateY: 0, opacity: 1 }, exit: { rotateY: 90, opacity: 0 } },
+      'rotate-in': { initial: { rotate: -90, scale: 0.8, opacity: 0 }, animate: { rotate: 0, scale: 1, opacity: 1 }, exit: { rotate: 90, scale: 0.8, opacity: 0 } },
+      'rotate-out': { initial: { rotate: 90, scale: 0.8, opacity: 0 }, animate: { rotate: 0, scale: 1, opacity: 1 }, exit: { rotate: -90, scale: 0.8, opacity: 0 } },
+      bounce: { initial: { scale: 0.5, opacity: 0 }, animate: { scale: 1, opacity: 1 }, exit: { scale: 0.5, opacity: 0 } },
+    };
+    return transitions[effect] || transitions.fade;
+  };
+
+  const animationVariants = currentPromo ? getAnimationVariants(currentPromo.transition_effect) : getAnimationVariants('fade');
+  const transitionProps = {
+    duration: 0.8,
+    ease: currentPromo?.transition_effect === 'bounce' ? [0.34, 1.56, 0.64, 1] : "easeInOut",
+  };
+
+  if (!currentRates) {
+    return (
+      <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-red-600 to-purple-600">
+        <div className="text-center text-white">
+          <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-2xl font-semibold">Loading Rates...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const currentMedia = mediaItems[currentMediaIndex];
+
+  return (
+    <div 
+      className={`w-full h-screen overflow-hidden flex flex-col ${isVertical ? '' : ''}`}
+      style={{ 
+        backgroundColor: settings?.background_color || "#f8f9fa",
+        color: settings?.text_color || "#212529"
+      }}
+    >
+      <AnimatePresence mode="wait">
+        {showingRates ? (
+          <motion.div
+            key="rates"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="flex-1 flex flex-col"
+          >
+            {/* Header with Company Logo Banner */}
+            <div className="relative flex-shrink-0">
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/eba88bfde_WhatsAppImage2025-08-11at213459.jpg" 
+                alt="देवी ज्वेलर्स Logo" 
+                className="w-full h-auto object-contain"
+                style={{ maxHeight: "115px" }}
+              />
+              
+              {/* Date and Time Overlay */}
+              <div className="absolute top-4 right-4 text-right text-amber-300 bg-black bg-opacity-50 px-4 py-2 rounded-lg backdrop-blur-sm">
+                <div className="text-lg font-bold">
+                  {format(currentTime, "EEEE dd-MMM-yyyy")}
+                </div>
+                <div className="text-2xl font-bold mt-1">
+                  {format(currentTime, "HH:mm:ss")}
+                </div>
+              </div>
+            </div>
+
+            {/* Today's Rate Header */}
+            <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white py-2 text-center flex-shrink-0">
+              <h2 className="text-2xl font-bold">Today's Rate</h2>
+            </div>
+
+            {/* Rates Display - Main Content */}
+            <div className="flex-1 p-4 md:p-6 min-h-0">
+              <div className={`grid gap-4 h-full ${isVertical ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                {/* Gold Rates */}
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-center mb-2 text-purple-700">GOLD RATES (Per 10 GMS)</h3>
+                  
+                  {/* 24K Gold */}
+                  <div className="bg-white rounded-xl shadow-lg p-3 border-l-8 border-yellow-500">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-2xl font-bold text-gray-800">24K GOLD</h4>
+                      <div className="w-8 h-8 bg-yellow-400 rounded-full gold-shimmer"></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="text-center p-2 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-blue-600 font-medium">SALE</p>
+                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_24k_sale}</p>
+                      </div>
+                      <div className="text-center p-2 bg-green-50 rounded-lg">
+                        <p className="text-sm text-green-600 font-medium">PURCHASE</p>
+                        <p className={`${rateFontSize} font-bold text-green-800`}>₹{currentRates.gold_24k_purchase}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 22K Gold */}
+                  <div className="bg-white rounded-xl shadow-lg p-3 border-l-8 border-orange-500">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-2xl font-bold text-gray-800">22K GOLD</h4>
+                      <div className="w-8 h-8 bg-orange-400 rounded-full gold-shimmer"></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="text-center p-2 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-blue-600 font-medium">SALE</p>
+                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_22k_sale}</p>
+                      </div>
+                      <div className="text-center p-2 bg-green-50 rounded-lg">
+                        <p className="text-sm text-green-600 font-medium">PURCHASE</p>
+                        <p className={`${rateFontSize} font-bold text-green-800`}>₹{currentRates.gold_22k_purchase}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 18K Gold */}
+                  <div className="bg-white rounded-xl shadow-lg p-3 border-l-8 border-amber-500">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-2xl font-bold text-gray-800">18K GOLD</h4>
+                      <div className="w-8 h-8 bg-amber-400 rounded-full gold-shimmer"></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="text-center p-2 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-blue-600 font-medium">SALE</p>
+                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_18k_sale}</p>
+                      </div>
+                      <div className="text-center p-2 bg-green-50 rounded-lg">
+                        <p className="text-sm text-green-600 font-medium">PURCHASE</p>
+                        <p className={`${rateFontSize} font-bold text-green-800`}>₹{currentRates.gold_18k_purchase}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Silver Rates & Promo Slideshow */}
+                <div className="flex flex-col h-full">
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold text-center mb-2 text-purple-700">SILVER RATES (Per KG)</h3>
+                    
+                    <div className="bg-white rounded-xl shadow-lg p-3 border-l-8 border-gray-400">
+                      <div className="flex justify-between items-center mb-2">
+                        <h4 className="text-2xl font-bold text-gray-800">SILVER</h4>
+                        <div className="w-8 h-8 bg-gray-300 rounded-full shadow-lg"></div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="text-center p-2 bg-blue-50 rounded-lg">
+                          <p className="text-sm text-blue-600 font-medium">SALE</p>
+                          <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.silver_per_kg_sale}</p>
+                        </div>
+                        <div className="text-center p-2 bg-green-50 rounded-lg">
+                          <p className="text-sm text-green-600 font-medium">PURCHASE</p>
+                          <p className={`${rateFontSize} font-bold text-green-800`}>₹{currentRates.silver_per_kg_purchase}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Promo Image and Spacer Logic */}
+                  {promoImages.length > 0 ? (
+                    <>
+                      {/* Promo Image Slideshow Section */}
+                      <div className="grow-[3] my-2 min-h-0 relative overflow-hidden">
+                        <div className="bg-white rounded-xl shadow-lg h-full w-full p-2 flex items-center justify-center">
+                          <AnimatePresence mode="wait">
+                            {currentPromo && (
+                              <motion.img
+                                key={currentPromo.id}
+                                src={currentPromo.image_url}
+                                alt={currentPromo.name || "Promotional Image"}
+                                className="w-full h-full object-contain rounded-lg"
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                                variants={animationVariants}
+                                transition={transitionProps}
+                              />
+                            )}
+                          </AnimatePresence>
+                          
+                          {/* Slideshow Indicators */}
+                          {promoImages.length > 1 && (
+                            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                              {promoImages.map((_, index) => (
+                                <div
+                                  key={index}
+                                  className={`w-2 h-2 rounded-full transition-colors ${
+                                    index === currentPromoIndex ? 'bg-purple-600' : 'bg-gray-400'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {/* Spacer */}
+                      <div className="grow"></div>
+                    </>
+                  ) : null}
+
+                  {/* Tagline */}
+                  <div className={`text-center pt-2 ${promoImages.length === 0 ? 'mt-auto' : ''}`}>
+                    <p className="text-xl font-bold text-purple-700">अनमोल क्षणांचे सोनेरी साक्षीदार</p>
+                    <p className="text-base text-gray-600 mt-1">Precious Moments, Golden Memories</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Banner Section */}
+            {bannerSettings?.banner_image_url && (
+              <div 
+                className="flex-shrink-0 bg-white border-t-4 border-purple-600 shadow-lg"
+                style={{ 
+                  height: `${bannerSettings.banner_height || 120}px`
+                }}
+              >
+                <div className="h-full flex items-center justify-center p-2">
+                  <img 
+                    src={bannerSettings.banner_image_url} 
+                    alt="Banner" 
+                    className="max-h-full max-w-full object-contain rounded-lg shadow-sm"
+                  />
+                </div>
+              </div>
+            )}
+          </motion.div>
+        ) : (
+          currentMedia && (
+            <motion.div
+              key={`media-${currentMediaIndex}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              className="w-full h-full flex items-center justify-center bg-black"
+            >
+              {currentMedia.media_type === "image" ? (
+                <img 
+                  src={currentMedia.file_url} 
+                  alt={currentMedia.name}
+                  className="max-w-full max-h-full object-contain"
+                />
+              ) : (
+                <video 
+                  src={currentMedia.file_url} 
+                  autoPlay 
+                  muted 
+                  className="max-w-full max-h-full object-contain"
+                />
+              )}
+            </motion.div>
+          )
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

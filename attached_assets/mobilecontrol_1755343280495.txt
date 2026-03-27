@@ -1,0 +1,315 @@
+import React, { useState, useEffect } from "react";
+import { GoldRate, DisplaySettings } from "@/entities/all";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Save, RefreshCw, TrendingUp, DollarSign } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+export default function MobileControl() {
+  const [rates, setRates] = useState({
+    gold_24k_sale: "",
+    gold_24k_purchase: "",
+    gold_22k_sale: "",
+    gold_22k_purchase: "",
+    gold_18k_sale: "",
+    gold_18k_purchase: "",
+    silver_per_kg_sale: "",
+    silver_per_kg_purchase: ""
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [currentRates, setCurrentRates] = useState(null);
+
+  useEffect(() => {
+    loadCurrentRates();
+  }, []);
+
+  const loadCurrentRates = async () => {
+    try {
+      const activeRates = await GoldRate.filter({ is_active: true }, "-created_date", 1);
+      if (activeRates[0]) {
+        setCurrentRates(activeRates[0]);
+        setRates(activeRates[0]);
+      }
+    } catch (error) {
+      console.error("Error loading rates:", error);
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    setRates(prev => ({ ...prev, [field]: parseFloat(value) || 0 }));
+  };
+
+  const saveRates = async () => {
+    setIsLoading(true);
+    try {
+      // Deactivate previous rates
+      if (currentRates) {
+        await GoldRate.update(currentRates.id, { is_active: false });
+      }
+
+      // Create new rates
+      await GoldRate.create({ ...rates, is_active: true });
+      
+      setMessage("Rates updated successfully!");
+      setTimeout(() => setMessage(""), 3000);
+      loadCurrentRates();
+    } catch (error) {
+      setMessage("Error updating rates. Please try again.");
+      console.error("Error saving rates:", error);
+    }
+    setIsLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-purple-50 p-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-red-600 to-purple-600 rounded-xl flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Gold Rates Control Panel</h1>
+          </div>
+          <p className="text-gray-600">Update daily gold and silver rates for TV display</p>
+        </div>
+
+        {message && (
+          <Alert className="mb-6 border-green-200 bg-green-50">
+            <AlertDescription className="text-green-800">{message}</AlertDescription>
+          </Alert>
+        )}
+
+        <Tabs defaultValue="rates" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 bg-white shadow-sm">
+            <TabsTrigger value="rates" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-purple-500 data-[state=active]:text-white">
+              Gold & Silver Rates
+            </TabsTrigger>
+            <TabsTrigger value="current" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-purple-500 data-[state=active]:text-white">
+              Current Display
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="rates" className="space-y-6">
+            {/* Gold Rates */}
+            <Card className="shadow-lg border-0 bg-gradient-to-r from-yellow-50 to-orange-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-white" />
+                  </div>
+                  Gold Rates (Per 10 GMS)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* 24K Gold */}
+                <div className="bg-white rounded-xl p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold mb-4 text-yellow-700">24K Gold</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="gold_24k_sale">Sale Rate</Label>
+                      <Input
+                        id="gold_24k_sale"
+                        type="number"
+                        value={rates.gold_24k_sale}
+                        onChange={(e) => handleInputChange("gold_24k_sale", e.target.value)}
+                        placeholder="Enter sale rate"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="gold_24k_purchase">Purchase Rate</Label>
+                      <Input
+                        id="gold_24k_purchase"
+                        type="number"
+                        value={rates.gold_24k_purchase}
+                        onChange={(e) => handleInputChange("gold_24k_purchase", e.target.value)}
+                        placeholder="Enter purchase rate"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 22K Gold */}
+                <div className="bg-white rounded-xl p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold mb-4 text-orange-700">22K Gold</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="gold_22k_sale">Sale Rate</Label>
+                      <Input
+                        id="gold_22k_sale"
+                        type="number"
+                        value={rates.gold_22k_sale}
+                        onChange={(e) => handleInputChange("gold_22k_sale", e.target.value)}
+                        placeholder="Enter sale rate"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="gold_22k_purchase">Purchase Rate</Label>
+                      <Input
+                        id="gold_22k_purchase"
+                        type="number"
+                        value={rates.gold_22k_purchase}
+                        onChange={(e) => handleInputChange("gold_22k_purchase", e.target.value)}
+                        placeholder="Enter purchase rate"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 18K Gold */}
+                <div className="bg-white rounded-xl p-6 shadow-sm">
+                  <h3 className="text-lg font-semibold mb-4 text-amber-700">18K Gold</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="gold_18k_sale">Sale Rate</Label>
+                      <Input
+                        id="gold_18k_sale"
+                        type="number"
+                        value={rates.gold_18k_sale}
+                        onChange={(e) => handleInputChange("gold_18k_sale", e.target.value)}
+                        placeholder="Enter sale rate"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="gold_18k_purchase">Purchase Rate</Label>
+                      <Input
+                        id="gold_18k_purchase"
+                        type="number"
+                        value={rates.gold_18k_purchase}
+                        onChange={(e) => handleInputChange("gold_18k_purchase", e.target.value)}
+                        placeholder="Enter purchase rate"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Silver Rates */}
+            <Card className="shadow-lg border-0 bg-gradient-to-r from-gray-50 to-slate-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-gray-400 to-slate-500 rounded-lg flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-white" />
+                  </div>
+                  Silver Rates (Per KG)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-white rounded-xl p-6 shadow-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="silver_per_kg_sale">Sale Rate</Label>
+                      <Input
+                        id="silver_per_kg_sale"
+                        type="number"
+                        value={rates.silver_per_kg_sale}
+                        onChange={(e) => handleInputChange("silver_per_kg_sale", e.target.value)}
+                        placeholder="Enter sale rate per kg"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="silver_per_kg_purchase">Purchase Rate</Label>
+                      <Input
+                        id="silver_per_kg_purchase"
+                        type="number"
+                        value={rates.silver_per_kg_purchase}
+                        onChange={(e) => handleInputChange("silver_per_kg_purchase", e.target.value)}
+                        placeholder="Enter purchase rate per kg"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Button
+              onClick={saveRates}
+              disabled={isLoading}
+              className="w-full h-14 text-lg bg-gradient-to-r from-red-600 to-purple-600 hover:from-red-700 hover:to-purple-700 shadow-lg"
+            >
+              {isLoading ? (
+                <>
+                  <RefreshCw className="w-5 h-5 mr-3 animate-spin" />
+                  Updating Rates...
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5 mr-3" />
+                  Update Rates on TV
+                </>
+              )}
+            </Button>
+          </TabsContent>
+
+          <TabsContent value="current">
+            {currentRates && (
+              <Card className="shadow-lg border-0">
+                <CardHeader>
+                  <CardTitle>Currently Displayed Rates</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-lg">Gold Rates (Per 10 GMS)</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between p-3 bg-yellow-50 rounded">
+                          <span>24K Sale:</span>
+                          <span className="font-semibold">₹{currentRates.gold_24k_sale}</span>
+                        </div>
+                        <div className="flex justify-between p-3 bg-yellow-50 rounded">
+                          <span>24K Purchase:</span>
+                          <span className="font-semibold">₹{currentRates.gold_24k_purchase}</span>
+                        </div>
+                        <div className="flex justify-between p-3 bg-orange-50 rounded">
+                          <span>22K Sale:</span>
+                          <span className="font-semibold">₹{currentRates.gold_22k_sale}</span>
+                        </div>
+                        <div className="flex justify-between p-3 bg-orange-50 rounded">
+                          <span>22K Purchase:</span>
+                          <span className="font-semibold">₹{currentRates.gold_22k_purchase}</span>
+                        </div>
+                        <div className="flex justify-between p-3 bg-amber-50 rounded">
+                          <span>18K Sale:</span>
+                          <span className="font-semibold">₹{currentRates.gold_18k_sale}</span>
+                        </div>
+                        <div className="flex justify-between p-3 bg-amber-50 rounded">
+                          <span>18K Purchase:</span>
+                          <span className="font-semibold">₹{currentRates.gold_18k_purchase}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-lg">Silver Rates (Per KG)</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between p-3 bg-gray-50 rounded">
+                          <span>Sale:</span>
+                          <span className="font-semibold">₹{currentRates.silver_per_kg_sale}</span>
+                        </div>
+                        <div className="flex justify-between p-3 bg-gray-50 rounded">
+                          <span>Purchase:</span>
+                          <span className="font-semibold">₹{currentRates.silver_per_kg_purchase}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}

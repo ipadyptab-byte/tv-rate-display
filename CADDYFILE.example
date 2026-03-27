@@ -1,0 +1,20 @@
+# Replace your-domain.tld with your real domain
+your-domain.tld, www.your-domain.tld {
+  encode zstd gzip
+
+  # Reverse proxy to Node on the same host
+  reverse_proxy 127.0.0.1:3000 {
+    # WebSocket support is automatic
+    header_up Host {host}
+    header_up X-Forwarded-For {remote}
+    header_up X-Forwarded-Proto {scheme}
+  }
+
+  # Optionally add caching, headers, rate limits, etc.
+}
+
+# For quick local TLS with Caddy (not for production):
+# :443 {
+#   tls internal
+#   reverse_proxy 127.0.0.1:3000
+# }

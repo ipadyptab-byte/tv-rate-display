@@ -1,0 +1,50 @@
+{
+  "name": "PromoImage",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the promotional image for reference"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "URL of the uploaded promo image"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this promo image is currently active"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "default": 5,
+      "description": "Duration to show this image in seconds"
+    },
+    "transition_effect": {
+      "type": "string",
+      "enum": [
+        "fade",
+        "slide-left",
+        "slide-right",
+        "zoom-in",
+        "zoom-out",
+        "flip-x",
+        "flip-y",
+        "rotate-in",
+        "rotate-out",
+        "bounce"
+      ],
+      "default": "fade",
+      "description": "Transition effect for this image"
+    },
+    "order_index": {
+      "type": "number",
+      "default": 0,
+      "description": "Display order for slideshow"
+    }
+  },
+  "required": [
+    "name",
+    "image_url"
+  ]
+}

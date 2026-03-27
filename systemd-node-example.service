@@ -1,0 +1,26 @@
+# Example systemd service for this Node.js app
+# Save as /etc/systemd/system/yourapp.service and adjust paths/user/env
+
+[Unit]
+Description=Gold Rates App (Node.js)
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/yourapp
+# Ensure .env is present in WorkingDirectory
+Environment=NODE_ENV=production
+Environment=PORT=3000
+# Example database URL - change accordingly
+Environment=DATABASE_URL=postgres://USER:PASS@127.0.0.1:5432/DATABASE
+ExecStart=/usr/bin/node dist/index.js
+Restart=always
+RestartSec=5
+# Hardening options
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

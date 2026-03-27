@@ -1,0 +1,548 @@
+
+import React, { useState, useEffect } from "react";
+import { DisplaySettings, BannerSettings } from "@/entities/all";
+import { UploadFile } from "@/integrations/Core";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Settings as SettingsIcon, Save, Monitor, Palette, Clock, Image } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+const colorPalette = [
+  { name: "White", value: "#ffffff" },
+  { name: "Light Gray", value: "#f8f9fa" },
+  { name: "Gray", value: "#e9ecef" },
+  { name: "Dark Gray", value: "#6c757d" },
+  { name: "Charcoal", value: "#343a40" },
+  { name: "Black", value: "#000000" },
+  { name: "Light Blue", value: "#e3f2fd" },
+  { name: "Blue", value: "#2196f3" },
+  { name: "Dark Blue", value: "#0d47a1" },
+  { name: "Light Green", value: "#e8f5e8" },
+  { name: "Green", value: "#4caf50" },
+  { name: "Dark Green", value: "#1b5e20" },
+  { name: "Light Red", value: "#ffebee" },
+  { name: "Red", value: "#f44336" },
+  { name: "Dark Red", value: "#b71c1c" },
+  { name: "Light Purple", value: "#f3e5f5" },
+  { name: "Purple", value: "#9c27b0" },
+  { name: "Dark Purple", value: "#4a148c" },
+  { name: "Light Orange", value: "#fff3e0" },
+  { name: "Orange", value: "#ff9800" },
+  { name: "Dark Orange", value: "#e65100" },
+  { name: "Light Yellow", value: "#fffde7" },
+  { name: "Yellow", value: "#ffeb3b" },
+  { name: "Gold", value: "#ffc107" }
+];
+
+const textColors = [
+  { name: "Black", value: "#000000" },
+  { name: "Dark Gray", value: "#212529" },
+  { name: "Gray", value: "#6c757d" },
+  { name: "Light Gray", value: "#adb5bd" },
+  { name: "White", value: "#ffffff" },
+  { name: "Blue", value: "#007bff" },
+  { name: "Dark Blue", value: "#0056b3" },
+  { name: "Green", value: "#28a745" },
+  { name: "Dark Green", value: "#1e7e34" },
+  { name: "Red", value: "#dc3545" },
+  { name: "Dark Red", value: "#c82333" },
+  { name: "Purple", value: "#6f42c1" },
+  { name: "Dark Purple", value: "#59359a" },
+  { name: "Orange", value: "#fd7e14" },
+  { name: "Gold", value: "#ffc107" }
+];
+
+const accentColors = [
+  { name: "Red", value: "#dc3545" },
+  { name: "Crimson", value: "#dc143c" },
+  { name: "Maroon", value: "#800000" },
+  { name: "Blue", value: "#007bff" },
+  { name: "Navy", value: "#000080" },
+  { name: "Royal Blue", value: "#4169e1" },
+  { name: "Green", value: "#28a745" },
+  { name: "Forest Green", value: "#228b22" },
+  { name: "Emerald", value: "#50c878" },
+  { name: "Purple", value: "#6f42c1" },
+  { name: "Violet", value: "#8a2be2" },
+  { name: "Indigo", value: "#4b0082" },
+  { name: "Orange", value: "#fd7e14" },
+  { name: "Dark Orange", value: "#ff8c00" },
+  { name: "Gold", value: "#ffd700" },
+  { name: "Pink", value: "#e83e8c" },
+  { name: "Magenta", value: "#ff00ff" },
+  { name: "Teal", value: "#20c997" }
+];
+
+export default function Settings() {
+  const [settings, setSettings] = useState({
+    orientation: "horizontal",
+    large_rate_font: false,
+    rate_number_font_size: "text-4xl", // New default
+    background_color: "#f8f9fa",
+    text_color: "#212529",
+    accent_color: "#dc3545",
+    refresh_interval_seconds: 30,
+    show_media: true,
+    rates_display_duration: 15
+  });
+  const [bannerSettings, setBannerSettings] = useState({
+    banner_image_url: "",
+    banner_height: 120,
+    is_active: true,
+    banner_position: "bottom"
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+  const [message, setMessage] = useState("");
+  const [currentSettings, setCurrentSettings] = useState(null);
+  const [currentBannerSettings, setCurrentBannerSettings] = useState(null);
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const [settingsList, bannerList] = await Promise.all([
+        DisplaySettings.list("-created_date", 1),
+        BannerSettings.list("-created_date", 1),
+      ]);
+      
+      if (settingsList[0]) {
+        setCurrentSettings(settingsList[0]);
+        // Merge existing settings with default for new properties if they don't exist
+        setSettings(prev => ({
+            ...prev,
+            ...settingsList[0],
+            rate_number_font_size: settingsList[0].rate_number_font_size || "text-4xl" // Ensure default if not present
+        }));
+      }
+      
+      if (bannerList[0]) {
+        setCurrentBannerSettings(bannerList[0]);
+        setBannerSettings(bannerList[0]);
+      }
+    } catch (error) {
+      console.error("Error loading settings:", error);
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    setSettings(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleBannerChange = (field, value) => {
+    setBannerSettings(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleBannerUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploadingBanner(true);
+    try {
+      const { file_url } = await UploadFile({ file });
+      setBannerSettings(prev => ({ ...prev, banner_image_url: file_url }));
+      setMessage("Banner image uploaded successfully!");
+      setTimeout(() => setMessage(""), 3000);
+    } catch (error) {
+      setMessage("Error uploading banner image. Please try again.");
+      console.error("Error uploading banner:", error);
+    } finally {
+      setIsUploadingBanner(false);
+    }
+  };
+
+  const saveSettings = async () => {
+    setIsLoading(true);
+    try {
+      // Save display settings
+      if (currentSettings) {
+        await DisplaySettings.update(currentSettings.id, settings);
+      } else {
+        await DisplaySettings.create(settings);
+      }
+
+      // Save banner settings
+      if (currentBannerSettings) {
+        await BannerSettings.update(currentBannerSettings.id, bannerSettings);
+      } else {
+        await BannerSettings.create(bannerSettings);
+      }
+      
+      setMessage("Settings saved successfully!");
+      setTimeout(() => setMessage(""), 3000);
+      loadSettings(); // Reload settings to get latest IDs and state
+    } catch (error) {
+      setMessage("Error saving settings. Please try again.");
+      console.error("Error saving settings:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 p-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+              <SettingsIcon className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Display Settings</h1>
+          </div>
+          <p className="text-gray-600">Configure TV display appearance and behavior</p>
+        </div>
+
+        {message && (
+          <Alert className="mb-6 border-green-200 bg-green-50">
+            <AlertDescription className="text-green-800">{message}</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="space-y-6">
+          {/* Display Configuration */}
+          <Card className="shadow-lg border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <Monitor className="w-6 h-6" />
+                Display Configuration
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label htmlFor="orientation">TV Orientation</Label>
+                <Select
+                  value={settings.orientation}
+                  onValueChange={(value) => handleInputChange("orientation", value)}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="horizontal">Horizontal (Landscape)</SelectItem>
+                    <SelectItem value="vertical">Vertical (Portrait)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="rate_font_size">Rate Numbers Font Size</Label>
+                <Select
+                  value={settings.rate_number_font_size}
+                  onValueChange={(value) => handleInputChange("rate_number_font_size", value)}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="text-2xl">Small (2XL)</SelectItem>
+                    <SelectItem value="text-3xl">Medium (3XL)</SelectItem>
+                    <SelectItem value="text-4xl">Large (4XL)</SelectItem>
+                    <SelectItem value="text-5xl">Extra Large (5XL)</SelectItem>
+                    <SelectItem value="text-6xl">Huge (6XL)</SelectItem>
+                    <SelectItem value="text-7xl">Giant (7XL)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-gray-600 mt-1">
+                  Controls only the rate numbers (₹52,900), not the labels
+                </p>
+              </div>
+
+              {/* Existing: Large Rate Font Toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="large_rate_font">Large Rate Font</Label>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Use larger font size for gold and silver rate numbers
+                  </p>
+                </div>
+                <Switch
+                  id="large_rate_font"
+                  checked={settings.large_rate_font}
+                  onCheckedChange={(checked) => handleInputChange("large_rate_font", checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="show_media">Show Media Rotation</Label>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Enable alternating between rates and uploaded media
+                  </p>
+                </div>
+                <Switch
+                  id="show_media"
+                  checked={settings.show_media}
+                  onCheckedChange={(checked) => handleInputChange("show_media", checked)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Banner Settings */}
+          <Card className="shadow-lg border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <Image className="w-6 h-6" />
+                Banner Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="banner_active">Show Banner</Label>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Display banner image at bottom of screen
+                  </p>
+                </div>
+                <Switch
+                  id="banner_active"
+                  checked={bannerSettings.is_active}
+                  onCheckedChange={(checked) => handleBannerChange("is_active", checked)}
+                />
+              </div>
+
+              {bannerSettings.is_active && (
+                <>
+                  <div>
+                    <Label htmlFor="banner_height">Banner Height (pixels)</Label>
+                    <Input
+                      id="banner_height"
+                      type="number"
+                      min="60"
+                      max="300"
+                      value={bannerSettings.banner_height}
+                      onChange={(e) => handleBannerChange("banner_height", parseInt(e.target.value) || 120)}
+                      className="mt-1 w-32"
+                    />
+                    <p className="text-sm text-gray-600 mt-1">
+                      Recommended: 120-180px for best appearance
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="banner_upload">Banner Image</Label>
+                    <div className="mt-2 space-y-3">
+                      <Input
+                        id="banner_upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleBannerUpload}
+                        disabled={isUploadingBanner}
+                        className="cursor-pointer"
+                      />
+                      {isUploadingBanner && (
+                        <p className="text-sm text-blue-600">Uploading banner image...</p>
+                      )}
+                      {bannerSettings.banner_image_url && (
+                        <div className="border rounded-lg p-3 bg-gray-50">
+                          <p className="text-sm text-gray-600 mb-2">Current Banner Preview:</p>
+                          <img 
+                            src={bannerSettings.banner_image_url} 
+                            alt="Banner Preview" 
+                            className="max-h-24 object-contain rounded border"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Color Settings */}
+          <Card className="shadow-lg border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <Palette className="w-6 h-6" />
+                Color Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label className="text-base font-medium">Background Color</Label>
+                <div className="grid grid-cols-6 gap-2 mt-3">
+                  {colorPalette.map((color) => (
+                    <button
+                      key={color.value}
+                      onClick={() => handleInputChange("background_color", color.value)}
+                      className={`h-12 rounded-lg border-2 flex items-center justify-center text-xs font-medium transition-all hover:scale-105 ${
+                        settings.background_color === color.value
+                          ? "border-blue-500 ring-2 ring-blue-200 shadow-lg"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                      style={{ 
+                        backgroundColor: color.value, 
+                        color: ["#ffffff", "#f8f9fa", "#e9ecef", "#fffde7", "#fff3e0", "#ffebee", "#e8f5e8", "#e3f2fd", "#f3e5f5"].includes(color.value) ? "#000" : "#fff" 
+                      }}
+                      title={color.name}
+                    >
+                      {color.name.length > 8 ? color.name.substring(0, 8) + '...' : color.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-base font-medium">Text Color</Label>
+                <div className="grid grid-cols-5 gap-2 mt-3">
+                  {textColors.map((color) => (
+                    <button
+                      key={color.value}
+                      onClick={() => handleInputChange("text_color", color.value)}
+                      className={`h-12 rounded-lg border-2 flex items-center justify-center text-xs font-medium transition-all hover:scale-105 ${
+                        settings.text_color === color.value
+                          ? "border-blue-500 ring-2 ring-blue-200 shadow-lg"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                      style={{ 
+                        backgroundColor: color.value === "#ffffff" ? "#f8f9fa" : color.value, 
+                        color: color.value === "#ffffff" ? "#000" : "#fff",
+                        border: color.value === "#ffffff" ? "2px solid #dee2e6" : undefined
+                      }}
+                      title={color.name}
+                    >
+                      {color.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-base font-medium">Accent Color (Brand Color)</Label>
+                <div className="grid grid-cols-6 gap-2 mt-3">
+                  {accentColors.map((color) => (
+                    <button
+                      key={color.value}
+                      onClick={() => handleInputChange("accent_color", color.value)}
+                      className={`h-12 rounded-lg border-2 flex items-center justify-center text-xs font-medium text-white transition-all hover:scale-105 ${
+                        settings.accent_color === color.value
+                          ? "border-blue-500 ring-2 ring-blue-200 shadow-lg"
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                      style={{ backgroundColor: color.value }}
+                      title={color.name}
+                    >
+                      {color.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Timing Settings */}
+          <Card className="shadow-lg border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <Clock className="w-6 h-6" />
+                Timing Settings
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label htmlFor="refresh_interval">Rates Refresh Interval (seconds)</Label>
+                <Input
+                  id="refresh_interval"
+                  type="number"
+                  min="10"
+                  max="300"
+                  value={settings.refresh_interval_seconds}
+                  onChange={(e) => handleInputChange("refresh_interval_seconds", parseInt(e.target.value) || 30)}
+                  className="mt-1 w-32"
+                />
+                <p className="text-sm text-gray-600 mt-1">
+                  How often to check for updated rates
+                </p>
+              </div>
+
+              {settings.show_media && (
+                <div>
+                  <Label htmlFor="rates_duration">Rates Display Duration (seconds)</Label>
+                  <Input
+                    id="rates_duration"
+                    type="number"
+                    min="5"
+                    max="60"
+                    value={settings.rates_display_duration}
+                    onChange={(e) => handleInputChange("rates_display_duration", parseInt(e.target.value) || 15)}
+                    className="mt-1 w-32"
+                  />
+                  <p className="text-sm text-gray-600 mt-1">
+                    How long to show rates before switching to media
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Preview */}
+          <Card className="shadow-lg border-0">
+            <CardHeader>
+              <CardTitle>Preview</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div 
+                className="h-32 rounded-lg p-4 flex items-center justify-center"
+                style={{ 
+                  backgroundColor: settings.background_color,
+                  color: settings.text_color,
+                  border: `2px solid ${settings.accent_color}`
+                }}
+              >
+                <div className="text-center">
+                  <div 
+                    className="text-2xl font-bold mb-2"
+                    style={{ color: settings.accent_color }}
+                  >
+                    देवी ज्वेलर्स
+                  </div>
+                  <div>
+                    Gold Rate: <span className={`${settings.rate_number_font_size} font-semibold`}>₹52,900</span> | Silver: <span className={`${settings.rate_number_font_size} font-semibold`}>₹68,500</span>
+                  </div>
+                </div>
+              </div>
+              
+              {bannerSettings.is_active && bannerSettings.banner_image_url && (
+                <div 
+                  className="mt-4 bg-white border-t-4 border-purple-600 rounded-lg p-2 flex items-center justify-center"
+                  style={{ height: `${Math.min(bannerSettings.banner_height / 2, 60)}px` }}
+                >
+                  <img 
+                    src={bannerSettings.banner_image_url} 
+                    alt="Banner Preview" 
+                    className="max-h-full max-w-full object-contain"
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Button
+            onClick={saveSettings}
+            disabled={isLoading}
+            className="w-full h-14 text-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-5 h-5 mr-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Saving Settings...
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5 mr-3" />
+                Save Settings
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}

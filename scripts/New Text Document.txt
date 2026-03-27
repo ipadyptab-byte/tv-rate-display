@@ -1,0 +1,5 @@
+# Local network mobile build (edit your LAN IP below)
+# Example: find your host IP with `ipconfig` (Windows) or `ifconfig` (macOS/Linux)
+# and replace 192.168.1.100 with it.
+VITE_API_BASE_URL=http://192.168.1.83:3000
+PORT=3000

@@ -1,0 +1,30 @@
+{
+  "name": "BannerSettings",
+  "type": "object",
+  "properties": {
+    "banner_image_url": {
+      "type": "string",
+      "description": "URL of the banner image"
+    },
+    "banner_height": {
+      "type": "number",
+      "default": 120,
+      "description": "Height of banner in pixels"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether banner is shown"
+    },
+    "banner_position": {
+      "type": "string",
+      "enum": [
+        "bottom",
+        "top"
+      ],
+      "default": "bottom",
+      "description": "Position of banner"
+    }
+  },
+  "required": []
+}

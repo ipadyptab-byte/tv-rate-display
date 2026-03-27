@@ -1,0 +1,324 @@
+import React, { useState, useEffect } from "react";
+import { PromoImage } from "@/entities/all";
+import { UploadFile } from "@/integrations/Core";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Upload, Image, Trash2, Eye, EyeOff, Loader2, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { motion, AnimatePresence } from "framer-motion";
+
+export default function PromoImageManager() {
+  const [promoImages, setPromoImages] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [updatingIds, setUpdatingIds] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [newImageSettings, setNewImageSettings] = useState({
+    duration_seconds: 5,
+    transition_effect: "fade"
+  });
+
+  useEffect(() => {
+    loadPromoImages();
+    
+    // Auto-refresh every 10 seconds to sync with other devices
+    const refreshInterval = setInterval(loadPromoImages, 10000);
+    return () => clearInterval(refreshInterval);
+  }, []);
+
+  const loadPromoImages = async () => {
+    try {
+      const images = await PromoImage.list("order_index");
+      setPromoImages(images);
+    } catch (err) {
+      console.error("Error loading promo images:", err);
+      setError("Failed to load promotional images.");
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadPromoImages();
+    setIsRefreshing(false);
+    setMessage("Promo images refreshed!");
+    setTimeout(() => setMessage(""), 3000);
+  };
+
+  const handleUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setIsUploading(true);
+    setError("");
+    setMessage("");
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const { file_url } = await UploadFile({ file });
+        
+        await PromoImage.create({
+          name: file.name,
+          image_url: file_url,
+          is_active: true,
+          duration_seconds: newImageSettings.duration_seconds,
+          transition_effect: newImageSettings.transition_effect,
+          order_index: promoImages.length + i
+        });
+      }
+      
+      // Refresh the list after upload
+      await loadPromoImages();
+      setMessage(`Successfully uploaded ${files.length} image(s)!`);
+      setTimeout(() => setMessage(""), 4000);
+    } catch (err) {
+      setError("Error uploading images. Please try again.");
+      console.error("Error uploading images:", err);
+    }
+    setIsUploading(false);
+    e.target.value = '';
+  };
+  
+  const handleUpdate = async (id, data) => {
+    setUpdatingIds(prev => [...prev, id]);
+    try {
+        await PromoImage.update(id, data);
+        setPromoImages(prev => prev.map(img => img.id === id ? { ...img, ...data } : img));
+    } catch (err) {
+        setError("Failed to update image.");
+        console.error("Error updating image:", err);
+    } finally {
+        setUpdatingIds(prev => prev.filter(updatingId => updatingId !== id));
+    }
+  };
+
+  const deleteImage = async (id) => {
+    setUpdatingIds(prev => [...prev, id]);
+    try {
+      await PromoImage.delete(id);
+      setPromoImages(prev => prev.filter(img => img.id !== id));
+      setMessage("Image deleted successfully!");
+      setTimeout(() => setMessage(""), 4000);
+    } catch (err) {
+      setError("Error deleting image.");
+      console.error("Error deleting image:", err);
+    } finally {
+        setUpdatingIds(prev => prev.filter(updatingId => updatingId !== id));
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {message && (
+        <Alert className="border-green-200 bg-green-50">
+          <AlertDescription className="text-green-800">{message}</AlertDescription>
+        </Alert>
+      )}
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Upload Section */}
+      <Card className="shadow-lg border-0">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3">
+            <Upload className="w-6 h-6" />
+            Upload New Promotional Images
+            <Button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              variant="outline"
+              size="sm"
+              className="ml-auto"
+            >
+              {isRefreshing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4" />
+              )}
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Default Duration (seconds)</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={newImageSettings.duration_seconds}
+                  onChange={(e) => setNewImageSettings(prev => ({
+                    ...prev,
+                    duration_seconds: parseInt(e.target.value) || 5
+                  }))}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Default Transition</Label>
+                <Select
+                  value={newImageSettings.transition_effect}
+                  onValueChange={(value) => setNewImageSettings(prev => ({
+                    ...prev,
+                    transition_effect: value
+                  }))}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select a transition" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fade">Fade</SelectItem>
+                    <SelectItem value="slide-left">Slide Left</SelectItem>
+                    <SelectItem value="slide-right">Slide Right</SelectItem>
+                    <SelectItem value="zoom-in">Zoom In</SelectItem>
+                    <SelectItem value="zoom-out">Zoom Out</SelectItem>
+                    <SelectItem value="flip-x">Flip (X-axis)</SelectItem>
+                    <SelectItem value="flip-y">Flip (Y-axis)</SelectItem>
+                    <SelectItem value="rotate-in">Rotate In</SelectItem>
+                    <SelectItem value="rotate-out">Rotate Out</SelectItem>
+                    <SelectItem value="bounce">Bounce</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="relative">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleUpload}
+                  disabled={isUploading}
+                  className="cursor-pointer"
+                />
+                {isUploading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 rounded-md">
+                      <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
+                      <p className="ml-2 text-purple-600">Uploading...</p>
+                  </div>
+                )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Images Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <AnimatePresence>
+          {promoImages.map((image) => {
+            const isUpdating = updatingIds.includes(image.id);
+            return (
+            <motion.div
+              key={image.id}
+              layout
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
+            >
+              <Card className={`shadow-lg border-0 overflow-hidden transition-opacity ${
+                image.is_active ? 'ring-2 ring-green-500' : 'opacity-60'
+              } ${isUpdating ? 'opacity-50' : ''}`}>
+                <div className="relative aspect-video bg-gray-100">
+                  <img
+                    src={image.image_url}
+                    alt={image.name}
+                    className="w-full h-full object-cover"
+                  />
+                  
+                  <div className="absolute top-2 right-2 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={image.is_active ? "default" : "secondary"}
+                      onClick={() => handleUpdate(image.id, { is_active: !image.is_active })}
+                      disabled={isUpdating}
+                      className="h-8 px-2"
+                    >
+                      {image.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => deleteImage(image.id)}
+                      disabled={isUpdating}
+                      className="h-8 px-2"
+                    >
+                      {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    </Button>
+                  </div>
+
+                  <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-sm">
+                    {image.duration_seconds}s
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-purple-600 bg-opacity-70 text-white px-2 py-1 rounded text-xs capitalize">
+                    {image.transition_effect.replace('-', ' ')}
+                  </div>
+                </div>
+                
+                <CardContent className="p-4 space-y-3">
+                  <h3 className="font-semibold truncate">{image.name}</h3>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">Duration (sec)</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="60"
+                        defaultValue={image.duration_seconds}
+                        onBlur={(e) => handleUpdate(image.id, { duration_seconds: parseInt(e.target.value) || 5 })}
+                        disabled={isUpdating}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Transition</Label>
+                      <Select
+                        defaultValue={image.transition_effect}
+                        onValueChange={(value) => handleUpdate(image.id, { transition_effect: value })}
+                        disabled={isUpdating}
+                      >
+                        <SelectTrigger className="h-8 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fade">Fade</SelectItem>
+                          <SelectItem value="slide-left">Slide Left</SelectItem>
+                          <SelectItem value="slide-right">Slide Right</SelectItem>
+                          <SelectItem value="zoom-in">Zoom In</SelectItem>
+                          <SelectItem value="zoom-out">Zoom Out</SelectItem>
+                          <SelectItem value="flip-x">Flip (X-axis)</SelectItem>
+                          <SelectItem value="flip-y">Flip (Y-axis)</SelectItem>
+                          <SelectItem value="rotate-in">Rotate In</SelectItem>
+                          <SelectItem value="rotate-out">Rotate Out</SelectItem>
+                          <SelectItem value="bounce">Bounce</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )})}
+        </AnimatePresence>
+      </div>
+
+      {promoImages.length === 0 && !isUploading && (
+        <div className="text-center py-12">
+          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Image className="w-12 h-12 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Promotional Images Yet</h3>
+          <p className="text-gray-600">Upload some images to create a slideshow</p>
+        </div>
+      )}
+    </div>
+  );
+}

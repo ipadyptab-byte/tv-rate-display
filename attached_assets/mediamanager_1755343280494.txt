@@ -1,0 +1,358 @@
+import React, { useState, useEffect, useRef } from "react";
+import { MediaItem } from "@/entities/all";
+import { UploadFile } from "@/integrations/Core";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Upload, Image, Video, Trash2, Eye, EyeOff, Clock, Loader2, RefreshCw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { motion, AnimatePresence } from "framer-motion";
+
+export default function MediaManager() {
+  const [mediaItems, setMediaItems] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [newMediaDuration, setNewMediaDuration] = useState(30);
+  const [updatingIds, setUpdatingIds] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    loadMediaItems();
+    
+    // Auto-refresh every 10 seconds to sync with other devices
+    const refreshInterval = setInterval(loadMediaItems, 10000);
+    return () => clearInterval(refreshInterval);
+  }, []);
+
+  const loadMediaItems = async () => {
+    try {
+      const items = await MediaItem.list("-created_date");
+      setMediaItems(items);
+    } catch (error) {
+      console.error("Error loading media items:", error);
+      setError("Failed to load media items.");
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadMediaItems();
+    setIsRefreshing(false);
+    setMessage("Media list refreshed!");
+    setTimeout(() => setMessage(""), 3000);
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    const validFiles = files.filter(file => 
+      file.type.startsWith('image/') || file.type.startsWith('video/')
+    );
+    
+    if (validFiles.length > 0) {
+      uploadFiles(validFiles);
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      uploadFiles(files);
+    }
+    e.target.value = '';
+  };
+
+  const uploadFiles = async (files) => {
+    setIsUploading(true);
+    setError("");
+    setMessage("");
+    try {
+      for (const file of files) {
+        const { file_url } = await UploadFile({ file });
+        const mediaType = file.type.startsWith('image/') ? 'image' : 'video';
+        
+        await MediaItem.create({
+          name: file.name,
+          file_url,
+          media_type: mediaType,
+          duration_seconds: newMediaDuration,
+          is_active: true,
+          order_index: mediaItems.length,
+        });
+      }
+      
+      // Refresh the list after upload
+      await loadMediaItems();
+      setMessage(`Successfully uploaded ${files.length} file(s)!`);
+      setTimeout(() => setMessage(""), 4000);
+    } catch (err) {
+      setError("Error uploading files. Please try again.");
+      console.error("Error uploading files:", err);
+    }
+    setIsUploading(false);
+  };
+
+  const handleUpdate = async (id, data) => {
+    setUpdatingIds(prev => [...prev, id]);
+    try {
+      await MediaItem.update(id, data);
+      setMediaItems(prev => prev.map(item => item.id === id ? { ...item, ...data } : item));
+    } catch (err) {
+      setError("Failed to update media item.");
+      console.error("Error updating media:", err);
+    } finally {
+      setUpdatingIds(prev => prev.filter(updatingId => updatingId !== id));
+    }
+  };
+
+  const deleteMedia = async (id) => {
+    setUpdatingIds(prev => [...prev, id]);
+    try {
+      await MediaItem.delete(id);
+      setMediaItems(prev => prev.filter(item => item.id !== id));
+      setMessage("Media item deleted successfully!");
+      setTimeout(() => setMessage(""), 4000);
+    } catch (err) {
+      setError("Error deleting media item.");
+      console.error("Error deleting media:", err);
+    } finally {
+      setUpdatingIds(prev => prev.filter(updatingId => updatingId !== id));
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+              <Image className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Media Manager</h1>
+            <Button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              variant="outline"
+              size="sm"
+              className="ml-4"
+            >
+              {isRefreshing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+          <p className="text-gray-600">Upload and manage images & videos for TV display</p>
+        </div>
+
+        {message && (
+          <Alert className="mb-6 border-green-200 bg-green-50">
+            <AlertDescription className="text-green-800">{message}</AlertDescription>
+          </Alert>
+        )}
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Upload Area */}
+        <Card className="mb-8 shadow-lg border-0 bg-white">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              <Upload className="w-6 h-6" />
+              Upload New Media
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="mb-4">
+              <Label htmlFor="duration">Default Display Duration (seconds)</Label>
+              <Input
+                id="duration"
+                type="number"
+                min="1"
+                max="300"
+                value={newMediaDuration}
+                onChange={(e) => setNewMediaDuration(parseInt(e.target.value) || 30)}
+                className="w-32 mt-1"
+              />
+            </div>
+            
+            <div
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                dragActive
+                  ? "border-purple-500 bg-purple-50"
+                  : "border-gray-300 hover:border-purple-400"
+              }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*,video/*"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              
+              <div className="mb-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  {isUploading ? (
+                    <div className="animate-spin w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full" />
+                  ) : (
+                    <Upload className="w-6 h-6 text-purple-600" />
+                  )}
+                </div>
+                <h3 className="text-lg font-semibold mb-2">
+                  {isUploading ? "Uploading..." : "Drag & Drop Media Files"}
+                </h3>
+                <p className="text-gray-600 mb-4">or click to browse</p>
+              </div>
+              
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              >
+                Select Files
+              </Button>
+              
+              <p className="text-sm text-gray-500 mt-4">
+                Supports: Images (JPG, PNG, GIF) & Videos (MP4, WebM)
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Media Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <AnimatePresence>
+            {mediaItems.map((item) => {
+              const isUpdating = updatingIds.includes(item.id);
+              return (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20, transition: { duration: 0.2 } }}
+                >
+                  <Card className={`shadow-lg border-0 overflow-hidden transition-opacity ${
+                    item.is_active ? 'ring-2 ring-green-500' : 'opacity-60'
+                  } ${isUpdating ? 'opacity-50' : ''}`}>
+                    <div className="relative aspect-video bg-gray-100">
+                      {item.media_type === 'image' ? (
+                        <img
+                          src={item.file_url}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <video
+                          src={item.file_url}
+                          className="w-full h-full object-cover"
+                          controls={false}
+                          muted
+                          loop
+                          playsInline
+                        />
+                      )}
+                      
+                      <div className="absolute top-2 right-2 flex gap-2">
+                        <Button
+                          size="sm"
+                          variant={item.is_active ? "default" : "secondary"}
+                          onClick={() => handleUpdate(item.id, { is_active: !item.is_active })}
+                          disabled={isUpdating}
+                          className="h-8 px-2"
+                        >
+                          {item.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteMedia(item.id)}
+                          disabled={isUpdating}
+                          className="h-8 px-2"
+                        >
+                          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        </Button>
+                      </div>
+
+                      <div className="absolute bottom-2 left-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-sm font-medium">
+                        {item.duration_seconds}s
+                      </div>
+                    </div>
+                    
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold truncate mb-2">{item.name}</h3>
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                        {item.media_type === 'image' ? (
+                          <Image className="w-4 h-4" />
+                        ) : (
+                          <Video className="w-4 h-4" />
+                        )}
+                        <span className="capitalize">{item.media_type}</span>
+                        <span className="text-gray-400">•</span>
+                        <span className={item.is_active ? 'text-green-600' : 'text-gray-500'}>
+                          {item.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-gray-500" />
+                        <Label className="text-sm">Duration:</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="300"
+                          defaultValue={item.duration_seconds}
+                          onBlur={(e) => handleUpdate(item.id, { duration_seconds: parseInt(e.target.value) || 30 })}
+                          disabled={isUpdating}
+                          className="h-8 text-sm flex-1"
+                        />
+                        <span className="text-xs text-gray-500">sec</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+
+        {mediaItems.length === 0 && (
+          <div className="text-center py-12">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Image className="w-12 h-12 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Media Items Yet</h3>
+            <p className="text-gray-600">Upload some images or videos to get started</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
