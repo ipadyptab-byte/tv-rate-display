@@ -1,5 +1,6 @@
 import { createServer } from "http";
-import { setupVite, serveStatic, log } from "./vite";
+import { setupVite, serveStatic } from "./vite";
+import { log } from "./log";
 import { storage } from "./storage";
 import { insertGoldRateSchema } from "@shared/schema";
 import { createApp } from "./app";
