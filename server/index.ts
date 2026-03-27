@@ -1,120 +1,125 @@
-import { createServer } from "http";
-import { setupVite, serveStatic, log } from "./vite";
-import { storage } from "./storage";
-import { insertGoldRateSchema } from "@shared/schema";
-import { createApp } from "./app";
-
-// Robust global error handlers to prevent server crash on transient network failures
-process.on("unhandledRejection", (reason) => {
-  log(`unhandledRejection: ${(reason as Error)?.message || String(reason)}`);
-});
-process.on("uncaughtException", (err) => {
-  log(`uncaughtException: ${err.message}`);
-});
-
-async function performRateSync(): Promise<void> {
-  const apiUrl = "https://www.businessmantra.info/gold_rates/devi_gold_rate/api.php";
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20000); // 20s timeout
-
-  try {
-    const resp = await fetch(apiUrl, { cache: "no-store", signal: controller.signal });
-    if (!resp.ok) {
-      log(`rate sync: external fetch failed (${resp.status})`);
-      return;
-    }
-
-    let data: Record<string, number>;
-    try {
-      data = await resp.json() as Record<string, number>;
-    } catch (parseErr) {
-      log(`rate sync: failed to parse JSON - ${(parseErr as Error).message}`);
-      return;
-    }
-
-    const gold24kSale = Number(data["24K Gold"]);
-    const silverSalePerGram = Number(data["Silver"]);
-    if (!Number.isFinite(gold24kSale) || !Number.isFinite(silverSalePerGram)) {
-      log("rate sync: API missing fields");
-      return;
-    }
-
-    const calc = await storage.getRateSettings();
-    const perc_24k_purchase = calc?.perc_24k_purchase ?? 0.985;
-    const perc_22k_sale = calc?.perc_22k_sale ?? 0.92;
-    const perc_22k_purchase = calc?.perc_22k_purchase ?? 0.90;
-    const perc_18k_sale = calc?.perc_18k_sale ?? 0.86;
-    const perc_18k_purchase = calc?.perc_18k_purchase ?? 0.80;
-    const silver_purchase_offset = calc?.silver_purchase_offset ?? -5000;
-
-    // Silver from API is per 10 grams, convert to per kg (1000g / 10g = 100x)
-    const silverPerKgSale = silverSalePerGram * 100;
-
-    const round10 = (n: number) => Math.round(n / 10) * 10;
-
-    const payload = {
-      gold_24k_sale: round10(gold24kSale),
-      gold_24k_purchase: round10(gold24kSale * perc_24k_purchase),
-      gold_22k_sale: round10(gold24kSale * perc_22k_sale),
-      gold_22k_purchase: round10(gold24kSale * perc_22k_purchase),
-      gold_18k_sale: round10(gold24kSale * perc_18k_sale),
-      gold_18k_purchase: round10(gold24kSale * perc_18k_purchase),
-      silver_per_kg_sale: round10(silverPerKgSale),
-      silver_per_kg_purchase: round10(silverPerKgSale + silver_purchase_offset),
-      is_active: true,
-    };
-
-    const validated = insertGoldRateSchema.parse(payload);
-    await storage.createGoldRate(validated);
-    log("rate sync: stored new rates");
-  } catch (err) {
-    const msg = (err as Error).message || String(err);
-    if (msg.includes("aborted")) {
-      log("rate sync: request aborted (timeout)");
-    } else {
-      log(`rate sync error: ${msg}`);
-    }
-  } finally {
-    clearTimeout(timeout);
+{
+  "name": "rest-express",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development tsx server/index.ts",
+    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build:vercel": "esbuild server/app.ts --platform=node --bundle --format=esm --packages=external --tsconfig=tsconfig.json --alias:@shared=./shared --external:vite --external:@vitejs/* --outfile=api/_app.js",
+    "start": "cross-env NODE_ENV=production node dist/index.js",
+    "check": "tsc",
+    "db:push": "drizzle-kit push",
+    "init-db": "tsx scripts/init-db.ts",
+    "android:prep": "npm run build && npm run mobile:env",
+    "android:init": "node scripts/capacitor-init.mjs",
+    "android:add": "npx cap add android",
+    "android:sync": "npx cap sync android",
+    "android:open": "npx cap open android",
+    "android:env:public": "node scripts/use-env.mjs .env.mobile && node scripts/set-cap-url.mjs http://103.159.153.24:3000",
+    "android:env:local": "node scripts/use-env.mjs .env.mobile.local && node scripts/set-cap-url.mjs",
+    "android:assets": "npx @capacitor/assets generate --android --icon client/public/icon-512.png"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
+    "@jridgewell/trace-mapping": "^0.3.25",
+    "@neondatabase/serverless": "^0.10.4",
+    "@radix-ui/react-accordion": "^1.2.4",
+    "@radix-ui/react-alert-dialog": "^1.1.7",
+    "@radix-ui/react-aspect-ratio": "^1.1.3",
+    "@radix-ui/react-avatar": "^1.1.4",
+    "@radix-ui/react-checkbox": "^1.1.5",
+    "@radix-ui/react-collapsible": "^1.1.4",
+    "@radix-ui/react-context-menu": "^2.2.7",
+    "@radix-ui/react-dialog": "^1.1.7",
+    "@radix-ui/react-dropdown-menu": "^2.1.7",
+    "@radix-ui/react-hover-card": "^1.1.7",
+    "@radix-ui/react-label": "^2.1.3",
+    "@radix-ui/react-menubar": "^1.1.7",
+    "@radix-ui/react-navigation-menu": "^1.2.6",
+    "@radix-ui/react-popover": "^1.1.7",
+    "@radix-ui/react-progress": "^1.1.3",
+    "@radix-ui/react-radio-group": "^1.2.4",
+    "@radix-ui/react-scroll-area": "^1.2.4",
+    "@radix-ui/react-select": "^2.1.7",
+    "@radix-ui/react-separator": "^1.1.3",
+    "@radix-ui/react-slider": "^1.2.4",
+    "@radix-ui/react-slot": "^1.2.0",
+    "@radix-ui/react-switch": "^1.1.4",
+    "@radix-ui/react-tabs": "^1.1.4",
+    "@radix-ui/react-toast": "^1.2.7",
+    "@radix-ui/react-toggle": "^1.1.3",
+    "@radix-ui/react-toggle-group": "^1.1.3",
+    "@radix-ui/react-tooltip": "^1.2.0",
+    "@tanstack/react-query": "^5.60.5",
+    "@types/multer": "^2.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "connect-pg-simple": "^10.0.0",
+    "date-fns": "^3.6.0",
+    "drizzle-orm": "^0.39.1",
+    "drizzle-zod": "^0.7.0",
+    "embla-carousel-react": "^8.6.0",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "framer-motion": "^11.13.1",
+    "html-to-image": "^1.11.11",
+    "input-otp": "^1.4.2",
+    "lucide-react": "^0.453.0",
+    "memorystore": "^1.6.7",
+    "multer": "^2.0.2",
+    "next-themes": "^0.4.6",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "postgres": "^3.4.4",
+    "react": "^18.3.1",
+    "react-day-picker": "^8.10.1",
+    "react-dom": "^18.3.1",
+    "react-dropzone": "^14.3.8",
+    "react-hook-form": "^7.55.0",
+    "react-icons": "^5.4.0",
+    "react-resizable-panels": "^2.1.7",
+    "recharts": "^2.15.2",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss-animate": "^1.0.7",
+    "tw-animate-css": "^1.2.5",
+    "vaul": "^1.1.2",
+    "wouter": "^3.3.5",
+    "ws": "^8.18.0",
+    "zod": "^3.24.2",
+    "zod-validation-error": "^3.4.0"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^7.4.3",
+    "@replit/vite-plugin-cartographer": "^0.2.8",
+    "@replit/vite-plugin-runtime-error-modal": "^0.0.3",
+    "@tailwindcss/typography": "^0.5.15",
+    "@tailwindcss/vite": "^4.1.3",
+    "@types/connect-pg-simple": "^7.0.3",
+    "@types/express": "4.17.21",
+    "@types/express-session": "^1.18.0",
+    "@types/node": "20.16.11",
+    "@types/passport": "^1.0.16",
+    "@types/passport-local": "^1.0.38",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "@types/ws": "^8.5.13",
+    "@vitejs/plugin-react": "^4.3.2",
+    "autoprefixer": "^10.4.20",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
+    "drizzle-kit": "^0.30.4",
+    "esbuild": "^0.25.0",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.1",
+    "typescript": "5.6.3",
+    "vite": "^5.4.19"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.8"
   }
 }
-
-function scheduleRateSync() {
-  let cancelled = false;
-
-  const loop = async () => {
-    if (cancelled) return;
-
-    await performRateSync();
-
-    const calc = await storage.getRateSettings();
-    const minutes = calc?.check_interval_minutes ?? 5;
-    const intervalMs = Math.max(1, minutes) * 60_000;
-
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
-    if (cancelled) return;
-    loop();
-  };
-
-  loop();
-
-  return () => { cancelled = true; };
-}
-
-(async () => {
-  const app = await createApp();
-  const server = createServer(app);
-
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
-  scheduleRateSync();
-
-  const port = parseInt(process.env.PORT || '3000', 10);
-  server.listen(port, "0.0.0.0", () => {
-    log(`serving on port ${port}`);
-  });
-})();
