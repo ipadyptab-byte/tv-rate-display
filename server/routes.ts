@@ -224,10 +224,11 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   // Fetch and store rates from external API
   // GET /api/rates/sync - fetches latest 24k sale and silver sale, computes others via settings, stores to Postgres
-  app.get("/api/rates/sync", async (_req, res) => {
+  app.get("/api/rates/sync", async (req, res) => {
     try {
       const { syncRatesFromExternal } = await import("./ratesSync");
-      const newRates = await syncRatesFromExternal(storage);
+      const force = req.query.force !== "0";
+      const newRates = await syncRatesFromExternal(storage, { force });
       res.status(201).json({ message: "Rates synced", rates: newRates });
     } catch (error) {
       if (error instanceof z.ZodError) {

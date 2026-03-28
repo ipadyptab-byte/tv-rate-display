@@ -100,6 +100,20 @@ export default function RateSync() {
     }
   });
 
+  // Auto sync while this page is open
+  React.useEffect(() => {
+    const minutes = rateSettings?.check_interval_minutes ?? 5;
+    const delayMs = Math.max(1, minutes) * 60_000;
+
+    const interval = setInterval(() => {
+      if (!syncMutation.isPending) {
+        syncMutation.mutate();
+      }
+    }, delayMs);
+
+    return () => clearInterval(interval);
+  }, [rateSettings?.check_interval_minutes]);
+
   const onSubmit = (data: z.infer<typeof rateSettingsSchema>) => {
     saveMutation.mutate(data);
   };

@@ -2,9 +2,27 @@ import { z } from "zod";
 import { insertGoldRateSchema } from "@shared/schema";
 import type { IStorage } from "./storage";
 
-const EXTERNAL_RATES_URL = "https://www.businessmantra.info/gold_rates/devi_gold_rate/api.php";
+const EXTERNAL_RATES_URL = "https://www.businessmantra.info/gold_rates/devi_</old_code><new_code>export async function syncRatesFromExternal(
+  storage: IStorage,
+  opts: { force?: boolean } = {}
+) {
+  const force = opts.force !== false;
 
-export async function syncRatesFromExternal(storage: IStorage) {
+  if (!force) {
+    const [settings, current] = await Promise.all([
+      storage.getRateSettings(),
+      storage.getCurrentRates(),
+    ]);
+
+    const minutes = settings?.check_interval_minutes ?? 5;
+    const last = current?.created_date ? new Date(current.created_date).getTime() : 0;
+    const now = Date.now();
+
+    if (last && now - last < Math.max(1, minutes) * 60_000) {
+      return current;
+    }
+  }
+
   const resp = await fetch(EXTERNAL_RATES_URL, { cache: "no-store" });
   if (!resp.ok) {
     const body = await resp.text();
