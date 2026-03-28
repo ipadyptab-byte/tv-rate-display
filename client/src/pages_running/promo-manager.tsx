@@ -143,8 +143,8 @@ export default function PromoManager() {
       {/* Common Header - matches Mobile Control page */}
       <div className="bg-gradient-to-r from-gold-600 to-gold-700 text-black p-4 flex justify-center">
         <img 
-          src="/logo.png" 
-          alt="Devi Jewellers Logo"
+          src="/logo.jpeg" 
+          alt="Logo"
           className="h-40 w-[350px] object-contain"
         />
       </div>

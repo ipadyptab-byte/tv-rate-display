@@ -9,7 +9,7 @@ import TVDisplay from "@/pages/tv-display";
 import MobileControl from "@/pages/mobile-control";
 import AdminDashboard from "@/pages/admin-dashboard";
 import MediaManager from "@/pages/media-manager";
-import PromoManager from "@/pages/promo-manager";
+import PromoManager from "@/pages_running/promo-manager";
 import RateSync from "@/pages/rate-sync";
 import SaleStatus from "@/pages/sale-status";
 import NotFound from "@/pages/not-found";
