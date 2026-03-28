@@ -1,5 +1,5 @@
 import { storage } from "../server/storage";
-import { writeCurrentRatesToFile } from "../server/currentRatesFile";
+import { writeCurrentRatesToFile } from "../server/currentratesfile";
 
 const rates = await storage.getCurrentRates();
 
