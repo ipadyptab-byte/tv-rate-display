@@ -75,7 +75,7 @@ export class PostgresStorage implements IStorage {
 
     const result = await db.insert(goldRates).values(rate).returning();
 
-    const { writeCurrentRatesToFile } = await import("./currentRatesFile");
+    const { writeCurrentRatesToFile } = await import("./currentratesfile");
     await writeCurrentRatesToFile(result[0]);
 
     return result[0];
@@ -89,7 +89,7 @@ export class PostgresStorage implements IStorage {
       .returning();
 
     if (result[0]?.is_active) {
-      const { writeCurrentRatesToFile } = await import("./currentRatesFile");
+      const { writeCurrentRatesToFile } = await import("./currentratesfile");
       await writeCurrentRatesToFile(result[0]);
     }
 
