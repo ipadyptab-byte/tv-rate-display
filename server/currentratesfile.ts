@@ -23,5 +23,16 @@ export async function writeCurrentRatesToFile(rates: GoldRate) {
     }`,
   ];
 
-  await writeFile(getCurrentRatesFilePath(), `${lines.join("\n")}\n`, "utf8");
+  try {
+    await writeFile(getCurrentRatesFilePath(), `${lines.join("\n")}\n`, "utf8");
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException | undefined)?.code;
+    if (code === "EROFS" || code === "EACCES" || code === "EPERM") {
+      // Some runtimes (e.g. Vercel serverless) have a read-only filesystem.
+      // Rates are still stored in the DB; file export is best-effort.
+      console.warn("Could not write currentrates.txt (read-only filesystem)");
+      return;
+    }
+    throw error;
+  }
 }
