@@ -182,6 +182,13 @@ export default function AdminDashboard() {
       <div className="max-w-6xl mx-auto">
         {/* Dashboard Header */}
         <div className="text-center mb-8">
+          <div className="flex items-center justify-center mb-4">
+            <img
+              src="/logo.jpeg"
+              alt="Logo"
+              className="h-12 w-auto object-contain"
+            />
+          </div>
           <div className="flex items-center justify-center space-x-3 mb-4">
             <div className="w-12 h-12 bg-gradient-to-r from-jewelry-primary to-jewelry-secondary rounded-xl flex items-center justify-center">
               <i className="fas fa-gem text-white text-xl"></i>
