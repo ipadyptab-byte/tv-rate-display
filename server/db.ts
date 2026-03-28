@@ -9,6 +9,15 @@ let pool: Pool | null = null;
 let db: ReturnType<typeof drizzle> | null = null;
 let initPromise: Promise<void> | null = null;
 
+export function getDatabaseUrl() {
+  return (
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.NEON_DATABASE_URL
+  );
+}
+
 async function ensureSchema(client: Pool) {
   // Keep this idempotent so a brand new DATABASE_URL works without manual migrations.
   await client.query(`
@@ -91,9 +100,9 @@ async function ensureSchema(client: Pool) {
 function init() {
   if (db && initPromise) return;
 
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = getDatabaseUrl();
   if (!connectionString) {
-    throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
+    throw new Error("Database URL not set. Set DATABASE_URL (or POSTGRES_URL / NEON_DATABASE_URL).");
   }
 
   pool = new Pool({ connectionString });

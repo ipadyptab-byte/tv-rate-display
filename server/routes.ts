@@ -166,6 +166,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid rate data", errors: error.errors });
       } else {
+        console.error("Create rates error:", error);
         res.status(500).json({ message: "Failed to create rates", error: (error as Error).message });
       }
     }
@@ -274,6 +275,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid computed rate data", errors: error.errors });
       } else {
+        console.error("Rates sync error:", error);
         res.status(500).json({ message: "Failed to sync rates", error: (error as Error).message });
       }
     }
