@@ -9,6 +9,12 @@
       "includeFiles": "server/**"
     }
   },
+  "crons": [
+    {
+      "path": "/api/rates/sync?force=0",
+      "schedule": "*/1 * * * *"
+    }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/[...path]" },
     { "source": "/(.*)", "destination": "/index.html" }
