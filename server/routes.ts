@@ -11,6 +11,7 @@ import {
   insertPromoImageSchema,
   insertBannerSettingsSchema,
 } from "@shared/schema";
+import { syncRatesFromExternal } from "./ratesSync";
 
 // Configure multer for memory storage (no file system)
 const memoryStorage = multer.memoryStorage();
@@ -226,7 +227,6 @@ export async function registerRoutes(app: Express): Promise<void> {
   // GET /api/rates/sync - fetches latest 24k sale and silver sale, computes others via settings, stores to Postgres
   app.get("/api/rates/sync", async (req, res) => {
     try {
-      const { syncRatesFromExternal } = await import("./ratesSync");
       const force = req.query.force !== "0";
       const newRates = await syncRatesFromExternal(storage, { force });
       res.status(201).json({ message: "Rates synced", rates: newRates });
@@ -243,7 +243,6 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Cron-friendly endpoint (no query-string). Only syncs if the interval is due.
   app.get("/api/rates/sync-scheduled", async (_req, res) => {
     try {
-      const { syncRatesFromExternal } = await import("./ratesSync");
       const newRates = await syncRatesFromExternal(storage, { force: false });
       res.status(200).json({ message: "Scheduled sync checked", rates: newRates });
     } catch (error) {
