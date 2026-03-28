@@ -1,7 +1,12 @@
 import { writeFile } from "node:fs/promises";
 import type { GoldRate } from "@shared/schema";
 
-function getCurrentRatesFilePath() {
+function getCurrentRatesFilePath(): string | URL {
+  // Vercel serverless filesystem is read-only except /tmp
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return "/tmp/currentrates.txt";
+  }
+
   return new URL("../currentrates.txt", import.meta.url);
 }
 
