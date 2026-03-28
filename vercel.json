@@ -11,7 +11,7 @@
   },
   "crons": [
     {
-      "path": "/api/rates/sync?force=0",
+      "path": "/api/rates/sync-scheduled",
       "schedule": "*/1 * * * *"
     }
   ],
