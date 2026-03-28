@@ -74,6 +74,10 @@ export class PostgresStorage implements IStorage {
     await db.update(goldRates).set({ is_active: false });
 
     const result = await db.insert(goldRates).values(rate).returning();
+
+    const { writeCurrentRatesToFile } = await import("./currentRatesFile");
+    await writeCurrentRatesToFile(result[0]);
+
     return result[0];
   }
 
@@ -83,6 +87,12 @@ export class PostgresStorage implements IStorage {
       .set(rate)
       .where(eq(goldRates.id, id))
       .returning();
+
+    if (result[0]?.is_active) {
+      const { writeCurrentRatesToFile } = await import("./currentRatesFile");
+      await writeCurrentRatesToFile(result[0]);
+    }
+
     return result[0];
   }
 
