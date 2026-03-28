@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -55,6 +55,11 @@ export default function TVDisplay() {
     },
   });
 
+  const syncPendingRef = useRef(false);
+  useEffect(() => {
+    syncPendingRef.current = syncRatesMutation.isPending;
+  }, [syncRatesMutation.isPending]);
+
   useEffect(() => {
     if (currentRates === null && !syncRatesMutation.isPending && !syncRatesMutation.isSuccess) {
       syncRatesMutation.mutate();
@@ -65,6 +70,12 @@ export default function TVDisplay() {
     queryKey: ["/api/settings/display"],
     queryFn: settingsApi.getDisplay,
     refetchInterval: 30000
+  });
+
+  const { data: rateSettings } = useQuery({
+    queryKey: ["/api/settings/rates"],
+    queryFn: settingsApi.getRate,
+    refetchInterval: 60000
   });
 
   const { data: mediaItems = [] } = useQuery({
@@ -90,6 +101,20 @@ export default function TVDisplay() {
     const timeInterval = setInterval(() => setCurrentTime(getIndianTime()), 1000);
     return () => clearInterval(timeInterval);
   }, []);
+
+  // Auto sync rates (works even on serverless deployments because the TV browser triggers it)
+  useEffect(() => {
+    const minutes = rateSettings?.check_interval_minutes ?? 5;
+    const delayMs = Math.max(1, minutes) * 60_000;
+
+    const interval = setInterval(() => {
+      if (!syncPendingRef.current) {
+        syncRatesMutation.mutate();
+      }
+    }, delayMs);
+
+    return () => clearInterval(interval);
+  }, [rateSettings?.check_interval_minutes]);
 
   // Effect for rotating between rates and media
   useEffect(() => {
