@@ -3,6 +3,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import postgres from "postgres";
 import { registerRoutes } from "./routes";
 import { log } from "./log";
+import { getDatabaseUrl } from "./db";
 
 export async function createApp() {
   const app = express();
@@ -43,12 +44,12 @@ export async function createApp() {
   // Health check endpoint
   app.get("/api/health", async (_req, res) => {
     try {
-      const connectionString = process.env.DATABASE_URL;
+      const connectionString = getDatabaseUrl();
       if (!connectionString) {
         return res.status(500).json({
           status: "unhealthy",
           database: "disconnected",
-          error: "DATABASE_URL not set",
+          error: "Database URL not set (DATABASE_URL / POSTGRES_URL / NEON_DATABASE_URL)",
         });
       }
 
@@ -68,7 +69,7 @@ export async function createApp() {
   // Quick diagnostics
   app.get("/api/debug/env", (_req, res) => {
     res.json({
-      hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+      hasDatabaseUrl: Boolean(getDatabaseUrl()),
       nodeEnv: process.env.NODE_ENV,
       vercel: Boolean(process.env.VERCEL),
     });
