@@ -23,7 +23,7 @@ const apiRequest = async (method: string, url: string, data?: any): Promise<Resp
     options.body = JSON.stringify(data);
   }
 
-  const response = await fetch(url, options);
+  const response = await fetch(url, { ...options, cache: "no-store" });
   
   if (!response.ok) {
     const errorText = await response.text();

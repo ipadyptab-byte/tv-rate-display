@@ -65,10 +65,13 @@ export default function TVDisplay() {
 
   const autoSyncRatesMutation = useMutation({
     mutationFn: async () => {
-      return await ratesApi.sync({ force: false });
+      return await ratesApi.sync({ force: true });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["/api/rates/current"] });
+    },
+    onError: (error: Error) => {
+      console.error("TV auto-sync failed:", error.message);
     },
   });
 
@@ -79,10 +82,8 @@ export default function TVDisplay() {
   }, [currentRates]);
 
   // Auto-sync while the TV display is open (Hobby plan friendly).
-  // This will only store a new row when the configured interval is due.
+  // This forces a store on every tick (useful when you want guaranteed updates without Vercel Cron).
   useEffect(() => {
-    if (!rateSettings) return;
-
     const minutes = rateSettings?.check_interval_minutes ?? 1;
     const delayMs = Math.max(1, minutes) * 60_000;
 
