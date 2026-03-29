@@ -83,7 +83,7 @@ export default function TVDisplay() {
   useEffect(() => {
     if (!rateSettings) return;
 
-    const minutes = rateSettings?.check_interval_minutes ?? 5;
+    const minutes = rateSettings?.check_interval_minutes ?? 1;
     const delayMs = Math.max(1, minutes) * 60_000;
 
     const tick = () => {

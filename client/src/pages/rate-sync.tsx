@@ -52,7 +52,7 @@ export default function RateSync() {
       perc_18k_sale: 0.860,
       perc_18k_purchase: 0.800,
       silver_purchase_offset: -5000,
-      check_interval_minutes: 5,
+      check_interval_minutes: 1,
     },
   });
 
@@ -65,7 +65,7 @@ export default function RateSync() {
         perc_18k_sale: rateSettings.perc_18k_sale ?? 0.860,
         perc_18k_purchase: rateSettings.perc_18k_purchase ?? 0.800,
         silver_purchase_offset: rateSettings.silver_purchase_offset ?? -5000,
-        check_interval_minutes: rateSettings.check_interval_minutes ?? 5,
+        check_interval_minutes: rateSettings.check_interval_minutes ?? 1,
       });
     }
   }, [rateSettings, form]);
