@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 1,
   "buildCommand": "npm run build && npm run build:vercel",
   "outputDirectory": "dist/public",
   "functions": {
