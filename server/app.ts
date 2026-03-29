@@ -75,6 +75,15 @@ export async function createApp() {
     });
   });
 
+  app.get("/api/version", (_req, res) => {
+    res.json({
+      vercel: Boolean(process.env.VERCEL),
+      gitCommitSha: process.env.VERCEL_GIT_COMMIT_SHA || null,
+      gitCommitRef: process.env.VERCEL_GIT_COMMIT_REF || null,
+      buildTime: new Date().toISOString(),
+    });
+  });
+
   await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
