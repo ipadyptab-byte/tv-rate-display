@@ -48,8 +48,25 @@ export default function TVDisplay() {
     refetchInterval: 30000
   });
 
+  const { data: rateSettings } = useQuery({
+    queryKey: ["/api/settings/rates"],
+    queryFn: settingsApi.getRate,
+    refetchInterval: 30000
+  });
+
   const syncRatesMutation = useMutation({
-    mutationFn: ratesApi.sync,
+    mutationFn: async () => {
+      return await ratesApi.sync({ force: true });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["/api/rates/current"] });
+    },
+  });
+
+  const autoSyncRatesMutation = useMutation({
+    mutationFn: async () => {
+      return await ratesApi.sync({ force: false });
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["/api/rates/current"] });
     },
@@ -60,6 +77,26 @@ export default function TVDisplay() {
       syncRatesMutation.mutate();
     }
   }, [currentRates]);
+
+  // Auto-sync while the TV display is open (Hobby plan friendly).
+  // This will only store a new row when the configured interval is due.
+  useEffect(() => {
+    if (!rateSettings) return;
+
+    const minutes = rateSettings?.check_interval_minutes ?? 5;
+    const delayMs = Math.max(1, minutes) * 60_000;
+
+    const tick = () => {
+      if (!autoSyncRatesMutation.isPending) {
+        autoSyncRatesMutation.mutate();
+      }
+    };
+
+    tick();
+    const interval = setInterval(tick, delayMs);
+
+    return () => clearInterval(interval);
+  }, [rateSettings?.check_interval_minutes, rateSettings?.id]);
 
   const { data: settings } = useQuery({
     queryKey: ["/api/settings/display"],
@@ -202,7 +239,7 @@ export default function TVDisplay() {
       <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-jewelry-primary to-jewelry-secondary">
         <div className="text-center text-white max-w-xl px-6">
           <p className="text-2xl font-semibold mb-2">No rates yet</p>
-          <p className="text-sm opacity-90">Open <span className="font-semibold">/rates-sync</span> to sync, or configure a cron job to call <span className="font-semibold">/api/rates/sync</span>.</p>
+          <p className="text-sm opacity-90">Rates will auto-sync while this screen is open. If you just deployed, wait a minute or open <span className="font-semibold">/rates-sync</span> and click <span className="font-semibold">Fetch &amp; Store</span> once.</p>
         </div>
       </div>
     );
