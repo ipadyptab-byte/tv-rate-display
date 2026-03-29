@@ -56,8 +56,15 @@ export const ratesApi = {
     return response.json();
   },
 
-  sync: async (): Promise<{ message: string; rates: GoldRate }> => {
-    const response = await apiRequest("GET", "/api/rates/sync");
+  sync: async (opts?: { force?: boolean }): Promise<{ message: string; rates: GoldRate }> => {
+    const force = opts?.force ?? true;
+    const url = force ? "/api/rates/sync" : "/api/rates/sync?force=0";
+    const response = await apiRequest("GET", url);
+    return response.json();
+  },
+
+  syncScheduled: async (): Promise<{ message: string; rates: GoldRate | null }> => {
+    const response = await apiRequest("GET", "/api/rates/sync-scheduled");
     return response.json();
   }
 };
