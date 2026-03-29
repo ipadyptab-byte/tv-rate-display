@@ -18,7 +18,7 @@ export async function syncRatesFromExternal(
   opts: { force: boolean },
 ) {
   const settings = await storage.getRateSettings();
-  const intervalMinutes = settings?.check_interval_minutes ?? 5;
+  const intervalMinutes = settings?.check_interval_minutes ?? 1;
 
   const current = await storage.getCurrentRates();
   if (!opts.force && current?.created_date) {
