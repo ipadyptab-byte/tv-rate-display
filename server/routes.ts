@@ -184,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         perc_18k_sale: 0.86,
         perc_18k_purchase: 0.80,
         silver_purchase_offset: -5000,
-        check_interval_minutes: 5
+        check_interval_minutes: 1
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch rate settings" });
