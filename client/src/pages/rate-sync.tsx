@@ -89,7 +89,7 @@ export default function RateSync() {
 
   const syncMutation = useMutation({
     mutationFn: async () => {
-      return await ratesApi.sync();
+      return await ratesApi.sync({ force: true });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rates/current"] });
@@ -100,19 +100,35 @@ export default function RateSync() {
     }
   });
 
-  // Auto sync while this page is open
+  const autoSyncMutation = useMutation({
+    mutationFn: async () => {
+      return await ratesApi.sync({ force: false });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/rates/current"] });
+    },
+  });
+
+  // Auto sync while this page is open (respects interval)
   React.useEffect(() => {
     const minutes = rateSettings?.check_interval_minutes ?? 5;
     const delayMs = Math.max(1, minutes) * 60_000;
 
-    const interval = setInterval(() => {
-      if (!syncMutation.isPending) {
-        syncMutation.mutate();
+    const tick = () => {
+      if (!autoSyncMutation.isPending) {
+        autoSyncMutation.mutate();
       }
-    }, delayMs);
+    };
+
+    // Run once immediately when settings are known, then on interval.
+    if (rateSettings) {
+      tick();
+    }
+
+    const interval = setInterval(tick, delayMs);
 
     return () => clearInterval(interval);
-  }, [rateSettings?.check_interval_minutes]);
+  }, [rateSettings?.check_interval_minutes, rateSettings?.id]);
 
   const onSubmit = (data: z.infer<typeof rateSettingsSchema>) => {
     saveMutation.mutate(data);
