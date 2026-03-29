@@ -2,14 +2,6 @@
   "version": 2,
   "buildCommand": "npm run build && npm run build:vercel",
   "outputDirectory": "dist/public",
-  "functions": {
-    "api/index.ts": {
-      "includeFiles": "server/**"
-    },
-    "api/[...path].ts": {
-      "includeFiles": "server/**"
-    }
-  },
   "crons": [
     {
       "path": "/api/rates/sync-scheduled",
@@ -21,5 +13,3 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
-
-
