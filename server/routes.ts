@@ -151,7 +151,12 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Gold Rates Routes
   app.get("/api/rates/current", async (req, res) => {
     try {
+      // On Hobby plan we can't rely on Vercel Cron. If a display is open and polling
+      // for current rates, use that traffic to trigger a scheduled sync.
+      await syncRatesFromExternal(storage, { force: false });
+
       const rates = await storage.getCurrentRates();
+      res.setHeader("Cache-Control", "no-store");
       res.json(rates || null);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch current rates" });
@@ -229,6 +234,7 @@ export async function registerRoutes(app: Express): Promise<void> {
     try {
       const force = req.query.force !== "0";
       const newRates = await syncRatesFromExternal(storage, { force });
+      res.setHeader("Cache-Control", "no-store");
       res.status(201).json({ message: "Rates synced", rates: newRates });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -244,6 +250,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   app.get("/api/rates/sync-scheduled", async (_req, res) => {
     try {
       const newRates = await syncRatesFromExternal(storage, { force: false });
+      res.setHeader("Cache-Control", "no-store");
       res.status(200).json({ message: "Scheduled sync checked", rates: newRates });
     } catch (error) {
       if (error instanceof z.ZodError) {
