@@ -47,7 +47,7 @@ const apiRequest = async (method: string, url: string, data?: any): Promise<Resp
 // Gold Rates API
 export const ratesApi = {
   getCurrent: async (): Promise<GoldRate | null> => {
-    const response = await apiRequest("GET", "/api/rates/current");
+    const response = await apiRequest("GET", `/api/rates/current?t=${Date.now()}`);
     return response.json();
   },
 

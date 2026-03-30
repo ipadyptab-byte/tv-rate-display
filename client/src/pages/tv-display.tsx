@@ -45,7 +45,10 @@ export default function TVDisplay() {
   const { data: currentRates, isLoading: ratesLoading, error: ratesError } = useQuery({
     queryKey: ["/api/rates/current"],
     queryFn: ratesApi.getCurrent,
-    refetchInterval: 30000
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchInterval: 30000,
+    refetchIntervalInBackground: true,
   });
 
   const { data: rateSettings } = useQuery({

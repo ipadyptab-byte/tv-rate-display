@@ -35,7 +35,10 @@ export default function RateSync() {
   const { data: currentRates } = useQuery({
     queryKey: ["/api/rates/current"],
     queryFn: ratesApi.getCurrent,
+    staleTime: 0,
+    refetchOnMount: true,
     refetchInterval: 30000,
+    refetchIntervalInBackground: true,
   });
 
   const { data: rateSettings } = useQuery<RateSettings | null>({
