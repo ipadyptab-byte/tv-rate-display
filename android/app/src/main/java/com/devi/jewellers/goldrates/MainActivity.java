@@ -1,4 +1,4 @@
-package com.example.goldrates;
+package com.devi.jewellers.goldrates;
 
 import com.getcapacitor.BridgeActivity;
 
