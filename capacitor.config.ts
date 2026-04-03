@@ -1,13 +1,13 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.example.goldrates",
-  appName: "GoldRatesApp",
+  appId: "com.devi.jewellers.goldrates",
+  appName: "Devi Jewellers",
   webDir: "dist/public",
   bundledWebRuntime: false,
   server: {
-    // Use your static IP and port for external network access
-    url: "http://192.168.1.83:3000",
+    // By default we load the bundled web assets (recommended).
+    // Use scripts/set-cap-url.mjs if you want to load the UI remotely.
     cleartext: true
   },
   android: {

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">GoldRatesApp</string>
-    <string name="title_activity_main">GoldRatesApp</string>
-    <string name="package_name">com.example.goldrates</string>
-    <string name="custom_url_scheme">com.example.goldrates</string>
+    <string name="app_name">Devi Jewellers</string>
+    <string name="title_activity_main">Devi Jewellers</string>
+    <string name="package_name">com.devi.jewellers.goldrates</string>
+    <string name="custom_url_scheme">com.devi.jewellers.goldrates</string>
 </resources>
