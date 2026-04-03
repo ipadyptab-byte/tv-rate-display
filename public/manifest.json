@@ -1,23 +1,39 @@
 {
-  "name": "DEVI JEWELLERS",
-  "short_name": "DEVI",
-  "description": "Gold & Silver Rate Management System",
-  "start_url": "/",
-  "scope": "/",
-  "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#4A148C",
+  "description": "DEVI JEWELLERS - Professional gold and silver rate management system. Real-time rates display for TV and mobile control panel for jewelry store operations.",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "DEVI JEWELLERS",
   "orientation": "any",
+  "scope": "/",
+  "short_name": "DEVI JEWELLERS",
+  "start_url": "/",
+  "theme_color": "#4A148C",
   "icons": [
-  {
-    "src": "/icon-192.png",
-    "sizes": "192x192",
-    "type": "image/png"
-  },
-  {
-    "src": "/icon-512.png",
-    "sizes": "512x512",
-    "type": "image/png"
-  }
-]
-                 }
+    {
+      "src": "https://displayrates.devi-jewellers.com/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "isSquare": true,
+      "isPng": true,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 192,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": true
+    },
+    {
+      "src": "https://displayrates.devi-jewellers.com/favicon.ico",
+      "type": "image/x-icon",
+      "isSquare": false,
+      "isPng": false,
+      "isWebp": false,
+      "isJpg": false,
+      "width": 0,
+      "is512x512": false,
+      "is256x256": false,
+      "is192x192": false
+    }
+  ]
+}
