@@ -6,8 +6,6 @@ const config: CapacitorConfig = {
   webDir: "dist/public",
   bundledWebRuntime: false,
   server: {
-    // Use your static IP and port for external network access
-    url: "http://192.168.1.83:3000",
     cleartext: true
   },
   android: {
