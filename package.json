@@ -16,7 +16,7 @@
     "android:add": "npx cap add android",
     "android:sync": "npx cap sync android",
     "android:open": "npx cap open android",
-    "android:env:public": "node scripts/use-env.mjs .env.mobile && node scripts/set-cap-url.mjs http://103.159.153.24:3000",
+    "android:env:public": "node scripts/use-env.mjs .env.mobile && node scripts/set-cap-url.mjs https://displayrates.devi-jewellers.com/",
     "android:env:local": "node scripts/use-env.mjs .env.mobile.local && node scripts/set-cap-url.mjs",
     "android:assets": "npx @capacitor/assets generate --android --icon client/public/icon-512.png"
   },
