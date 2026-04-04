@@ -7,6 +7,7 @@ const config: CapacitorConfig = {
   bundledWebRuntime: false,
   server: {
     url: "https://displayrates.devi-jewellers.com/",
+    allowNavigation: ["displayrates.devi-jewellers.com", "*.devi-jewellers.com"],
     cleartext: true
   },
   android: {
