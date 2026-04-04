@@ -286,3 +286,6 @@ export const systemApi = {
     return response.json();
   }
 };
+
+// Default export for compatibility
+export default { systemApi };
