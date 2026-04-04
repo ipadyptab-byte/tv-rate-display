@@ -6,6 +6,7 @@ const config: CapacitorConfig = {
   webDir: "dist/public",
   bundledWebRuntime: false,
   server: {
+    url: "https://displayrates.devi-jewellers.com/",
     cleartext: true
   },
   android: {
