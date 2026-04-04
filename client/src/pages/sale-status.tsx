@@ -3,6 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ratesApi, settingsApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Capacitor } from "@capacitor/core";
+import { Share } from "@capacitor/share";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 
 export default function SaleStatus() {
   // Indian time
@@ -267,32 +270,55 @@ export default function SaleStatus() {
       if (!generated) throw new Error("Failed to render image for sharing");
       const { blob, dataUrl } = generated;
 
+      const message = "Today's sale rates from Devi Jewellers.";
+
+      // 1) Capacitor Native Share (Android/iOS apps)
+      if (Capacitor.isNativePlatform()) {
+        try {
+          // Convert dataUrl to base64 string
+          const base64Data = dataUrl.split(',')[1];
+          // Write the file to the app's cache directory
+          const writeResult = await Filesystem.writeFile({
+            path: FILENAME,
+            data: base64Data,
+            directory: Directory.Cache
+          });
+          
+          // Use Capacitor Share plugin
+          await Share.share({
+            title: "Today's Sale Rates",
+            text: message,
+            url: writeResult.uri,
+            dialogTitle: 'Share on WhatsApp'
+          });
+          return;
+        } catch (nativeErr) {
+          console.error("Native share failed, falling back", nativeErr);
+        }
+      }
+
+      // 2) Try full Web Share with files (Android Chrome/Edge/Samsung, modern iOS)
       const file = new File([blob], FILENAME, { type: "image/png" });
-      // 1) Try full Web Share with files (Android Chrome/Edge/Samsung, modern iOS)
       // @ts-expect-error
       if (navigator?.canShare && navigator.canShare({ files: [file] })) {
         // @ts-expect-error
-        await navigator.share({ files: [file], title: "Today's Sale Rates" });
+        await navigator.share({ files: [file], title: "Today's Sale Rates", text: message });
         return;
       }
 
-      // 2) Try basic Web Share with text/url (older Safari/Android)
+      // 3) Try basic Web Share with text/url (older Safari/Android)
       // @ts-expect-error
       if (navigator?.share) {
-        // Some browsers cannot share files but can share text/url
-        // We include a short caption and instruct to save from preview if needed
         await navigator.share({
           title: "Today's Sale Rates",
-          text: "Today's sale rates from Devi Jewellers. If the image didn't attach, long-press the preview to save first.",
+          text: message + " If the image didn't attach, long-press the preview to save first.",
         });
-        // Also show preview to allow user to save image if file-sharing wasn't supported
         setPreviewUrl(dataUrl);
         return;
       }
 
-      // 3) WhatsApp web deep-link fallback (cannot attach image programmatically)
-      const message = "Today's sale rates from Devi Jewellers. Please see the attached image.";
-      const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      // 4) WhatsApp web deep-link fallback (cannot attach image programmatically)
+      const waUrl = `https://wa.me/?text=${encodeURIComponent(message + " Please see the attached image.")}`;
       window.open(waUrl, "_blank");
 
       // Show preview so user can long-press/save and attach in WhatsApp
