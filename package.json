@@ -11,6 +11,7 @@
     "check": "tsc",
     "db:push": "drizzle-kit push",
     "init-db": "tsx scripts/init-db.ts",
+    "mobile:env": "node -e \"const fs=require('fs');fs.copyFileSync('.env.mobile','.env');console.log('Copied .env.mobile -> .env');\"",
     "android:prep": "npm run build && npm run mobile:env",
     "android:init": "node scripts/capacitor-init.mjs",
     "android:add": "npx cap add android",

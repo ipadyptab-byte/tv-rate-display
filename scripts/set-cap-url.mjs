@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.example.goldrates",
-  appName: "GoldRatesApp",
+  appId: "com.devi.jewellers.goldrates",
+  appName: "Devi Jewellers",
   webDir: "dist/public",
   bundledWebRuntime: false,
   // By default the Android app loads the bundled web assets from webDir.
