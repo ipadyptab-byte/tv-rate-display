@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { ratesApi, promoApi, mediaApi, bannerApi, settingsApi } from "@/lib/api";
 
 export default function TVDisplay() {
-  const queryClient = useQueryClient();
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [showingRates, setShowingRates] = useState(true);
@@ -42,24 +41,11 @@ export default function TVDisplay() {
   }, []);
 
   // Data queries
-  const { data: currentRates, isLoading: ratesLoading, error: ratesError } = useQuery({
+  const { data: currentRates } = useQuery({
     queryKey: ["/api/rates/current"],
     queryFn: ratesApi.getCurrent,
     refetchInterval: 30000
   });
-
-  const syncRatesMutation = useMutation({
-    mutationFn: ratesApi.sync,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["/api/rates/current"] });
-    },
-  });
-
-  useEffect(() => {
-    if (currentRates === null && !syncRatesMutation.isPending && !syncRatesMutation.isSuccess) {
-      syncRatesMutation.mutate();
-    }
-  }, [currentRates]);
 
   const { data: settings } = useQuery({
     queryKey: ["/api/settings/display"],
@@ -141,44 +127,14 @@ export default function TVDisplay() {
   const isVertical = settings?.orientation === "vertical";
   const currentPromo = promoImages[currentPromoIndex];
   
-  // Dynamic font sizing based on settings and screen size
+  // Enhanced responsive font sizing
   const getRateFontSize = () => {
-    const baseSize = settings?.rate_number_font_size || 36;
-    if (screenSize === 'mobile') return Math.round(baseSize * 0.7);
-    if (screenSize === 'tablet') return Math.round(baseSize * 1.2);
-    if (screenSize === 'tv') return Math.round(baseSize * 1.5);
-    return baseSize;
+    if (screenSize === 'mobile') return "text-xl";
+    if (screenSize === 'tablet') return "text-3xl";
+    if (screenSize === 'tv') return "text-6xl";
+    return settings?.rate_number_font_size || "text-4xl";
   };
   const rateFontSize = getRateFontSize();
-
-  // Get colors from settings
-  const rateNumberColor = settings?.rate_number_color || "#1e40af";
-  const goldLabelColor = settings?.gold_rate_label_color || "#1f2937";
-  const silverLabelColor = settings?.silver_rate_label_color || "#1f2937";
-  const headerColor = settings?.header_color || "#000000";
-
-  // Get label font sizes
-  const getLabelFontSize = (isGold: boolean) => {
-    const baseSize = isGold 
-      ? (settings?.gold_rate_label_font_size || 18) 
-      : (settings?.silver_rate_label_font_size || 18);
-    if (screenSize === 'mobile') return Math.round(baseSize * 0.8);
-    if (screenSize === 'tablet') return Math.round(baseSize * 1.1);
-    if (screenSize === 'tv') return Math.round(baseSize * 1.3);
-    return baseSize;
-  };
-  const goldLabelFontSize = getLabelFontSize(true);
-  const silverLabelFontSize = getLabelFontSize(false);
-
-  // Get header font size
-  const getHeaderFontSize = () => {
-    const baseSize = settings?.header_font_size || 28;
-    if (screenSize === 'mobile') return Math.round(baseSize * 0.7);
-    if (screenSize === 'tablet') return Math.round(baseSize * 1.1);
-    if (screenSize === 'tv') return Math.round(baseSize * 1.5);
-    return baseSize;
-  };
-  const headerFontSize = getHeaderFontSize();
 
   const getAnimationVariants = (effect: string) => {
     const transitions = {
@@ -202,35 +158,12 @@ export default function TVDisplay() {
     ease: currentPromo?.transition_effect === 'bounce' ? [0.34, 1.56, 0.64, 1] : "easeInOut" as const,
   };
 
-  if (ratesLoading || syncRatesMutation.isPending) {
+  if (!currentRates) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-jewelry-primary to-jewelry-secondary">
         <div className="text-center text-white">
           <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-2xl font-semibold">Loading Rates...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (ratesError) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-jewelry-primary to-jewelry-secondary">
-        <div className="text-center text-white max-w-xl px-6">
-          <p className="text-2xl font-semibold mb-2">Unable to load rates</p>
-          <p className="text-sm opacity-90 break-words">{(ratesError as Error).message}</p>
-          <p className="text-sm opacity-90 mt-4">Check that /api is working and DATABASE_URL is set in Vercel.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!currentRates) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-jewelry-primary to-jewelry-secondary">
-        <div className="text-center text-white max-w-xl px-6">
-          <p className="text-2xl font-semibold mb-2">No rates yet</p>
-          <p className="text-sm opacity-90">Open <span className="font-semibold">/rates-sync</span> to sync, or configure a cron job to call <span className="font-semibold">/api/rates/sync</span>.</p>
         </div>
       </div>
     );
@@ -276,10 +209,7 @@ export default function TVDisplay() {
 
             {/* Today's Rate Header */}
             <div className={`bg-gradient-to-r from-gold-600 to-gold-700 text-black text-center flex-shrink-0 ${screenSize === 'tv' ? 'py-4' : 'py-2 md:py-3'}`}>
-              <h2 
-                className="font-display font-bold"
-                style={{ fontSize: `${headerFontSize}px`, color: headerColor }}
-              >TODAY'S RATES</h2>
+              <h2 className={`font-display font-bold ${screenSize === 'tv' ? 'text-5xl' : screenSize === 'tablet' ? 'text-2xl' : 'text-xl md:text-3xl'}`}>TODAY'S RATES</h2>
             </div>
 
             {/* Rates Display - Main Content */}
@@ -287,24 +217,24 @@ export default function TVDisplay() {
               <div className={`grid ${screenSize === 'tv' ? 'gap-12' : screenSize === 'tablet' ? 'gap-6' : 'gap-4 md:gap-8'} ${screenSize === 'mobile' || isVertical ? 'grid-cols-1' : 'grid-cols-2'}`}>
                 {/* Gold Rates */}
                 <div className="space-y-4 md:space-y-6">
-                  <h3 className="font-display font-bold text-center text-jewelry-primary mb-4 md:mb-6" style={{ fontSize: `${goldLabelFontSize + 8}px`, color: goldLabelColor }}>GOLD RATES (Per 10 GMS)</h3>
+                  <h3 className="text-lg md:text-2xl font-display font-bold text-center text-jewelry-primary mb-4 md:mb-6">GOLD RATES (Per 10 GMS)</h3>
                   
                   {/* 24K Gold */}
                   <div className="rate-card bg-white rounded-lg md:rounded-xl shadow-md md:shadow-xl p-3 md:p-6 border-l-4 md:border-l-8 border-jewelry-primary fade-in">
                     <div className="flex justify-between items-center mb-2 md:mb-4">
-                      <h4 className="font-bold" style={{ fontSize: `${goldLabelFontSize + 4}px`, color: goldLabelColor }}>24K GOLD</h4>
+                      <h4 className="text-lg md:text-2xl font-bold text-gray-800">24K GOLD</h4>
                       <div className="w-8 h-8 md:w-10 md:h-10 bg-jewelry-primary rounded-full gold-shimmer flex items-center justify-center">
                         <i className="fas fa-star text-white text-sm md:text-base"></i>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 md:gap-4">
                       <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="font-semibold mb-1" style={{ fontSize: `${goldLabelFontSize - 2}px`, color: goldLabelColor }}>SALE RATE</p>
-                        <p className="font-bold" style={{ fontSize: `${rateFontSize}px`, color: rateNumberColor }}>₹{currentRates.gold_24k_sale}</p>
+                        <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">SALE RATE</p>
+                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_24k_sale}</p>
                       </div>
                       <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="font-semibold mb-1" style={{ fontSize: `${goldLabelFontSize - 2}px`, color: goldLabelColor }}>PURCHASE RATE</p>
-                        <p className="font-bold" style={{ fontSize: `${rateFontSize}px`, color: rateNumberColor }}>₹{currentRates.gold_24k_purchase}</p>
+                        <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">PURCHASE RATE</p>
+                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_24k_purchase}</p>
                       </div>
                     </div>
                   </div>
@@ -312,19 +242,19 @@ export default function TVDisplay() {
                   {/* 22K Gold */}
                   <div className="rate-card bg-white rounded-lg md:rounded-xl shadow-md md:shadow-xl p-3 md:p-6 border-l-4 md:border-l-8 border-jewelry-primary fade-in">
                     <div className="flex justify-between items-center mb-2 md:mb-4">
-                      <h4 className="font-bold" style={{ fontSize: `${goldLabelFontSize + 4}px`, color: goldLabelColor }}>22K GOLD</h4>
+                      <h4 className="text-lg md:text-2xl font-bold text-gray-800">22K GOLD</h4>
                       <div className="w-8 h-8 md:w-10 md:h-10 bg-jewelry-primary rounded-full gold-shimmer flex items-center justify-center">
                         <i className="fas fa-crown text-white text-sm md:text-base"></i>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 md:gap-4">
                       <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="font-semibold mb-1" style={{ fontSize: `${goldLabelFontSize - 2}px`, color: goldLabelColor }}>SALE RATE</p>
-                        <p className="font-bold" style={{ fontSize: `${rateFontSize}px`, color: rateNumberColor }}>₹{currentRates.gold_22k_sale}</p>
+                        <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">SALE RATE</p>
+                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_22k_sale}</p>
                       </div>
                       <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="font-semibold mb-1" style={{ fontSize: `${goldLabelFontSize - 2}px`, color: goldLabelColor }}>PURCHASE RATE</p>
-                        <p className="font-bold" style={{ fontSize: `${rateFontSize}px`, color: rateNumberColor }}>₹{currentRates.gold_22k_purchase}</p>
+                        <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">PURCHASE RATE</p>
+                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_22k_purchase}</p>
                       </div>
                     </div>
                   </div>
@@ -332,19 +262,19 @@ export default function TVDisplay() {
                   {/* 18K Gold */}
                   <div className="rate-card bg-white rounded-lg md:rounded-xl shadow-md md:shadow-xl p-3 md:p-6 border-l-4 md:border-l-8 border-jewelry-primary fade-in">
                     <div className="flex justify-between items-center mb-2 md:mb-4">
-                      <h4 className="font-bold" style={{ fontSize: `${goldLabelFontSize + 4}px`, color: goldLabelColor }}>18K GOLD</h4>
+                      <h4 className="text-lg md:text-2xl font-bold text-gray-800">18K GOLD</h4>
                       <div className="w-8 h-8 md:w-10 md:h-10 bg-jewelry-primary rounded-full gold-shimmer flex items-center justify-center">
                         <i className="fas fa-crown text-white text-sm md:text-base"></i>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 md:gap-4">
                       <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="font-semibold mb-1" style={{ fontSize: `${goldLabelFontSize - 2}px`, color: goldLabelColor }}>SALE RATE</p>
-                        <p className="font-bold" style={{ fontSize: `${rateFontSize}px`, color: rateNumberColor }}>₹{currentRates.gold_18k_sale}</p>
+                        <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">SALE RATE</p>
+                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_18k_sale}</p>
                       </div>
                       <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="font-semibold mb-1" style={{ fontSize: `${goldLabelFontSize - 2}px`, color: goldLabelColor }}>PURCHASE RATE</p>
-                        <p className="font-bold" style={{ fontSize: `${rateFontSize}px`, color: rateNumberColor }}>₹{currentRates.gold_18k_purchase}</p>
+                        <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">PURCHASE RATE</p>
+                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_18k_purchase}</p>
                       </div>
                     </div>
                   </div>
@@ -354,23 +284,23 @@ export default function TVDisplay() {
                 <div className="space-y-4 md:space-y-6">
                   {/* Silver Rates */}
                   <div>
-                    <h3 className="font-display font-bold text-center text-jewelry-primary mb-4 md:mb-6" style={{ fontSize: `${silverLabelFontSize + 8}px`, color: silverLabelColor }}>SILVER RATES (Per KG)</h3>
+                    <h3 className="text-lg md:text-2xl font-display font-bold text-center text-jewelry-primary mb-4 md:mb-6">SILVER RATES (Per KG)</h3>
                     
                     <div className="rate-card bg-white rounded-lg md:rounded-xl shadow-md md:shadow-xl p-3 md:p-6 border-l-4 md:border-l-8 border-jewelry-primary fade-in">
                       <div className="flex justify-between items-center mb-2 md:mb-4">
-                        <h4 className="font-bold" style={{ fontSize: `${silverLabelFontSize + 4}px`, color: silverLabelColor }}>SILVER</h4>
+                        <h4 className="text-lg md:text-2xl font-bold text-gray-800">SILVER</h4>
                         <div className="w-8 h-8 md:w-10 md:h-10 bg-jewelry-primary rounded-full shadow-lg flex items-center justify-center">
                           <i className="fas fa-circle text-white text-sm md:text-base"></i>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-2 md:gap-4">
                         <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                          <p className="font-semibold mb-1" style={{ fontSize: `${silverLabelFontSize - 2}px`, color: silverLabelColor }}>SALE RATE</p>
-                          <p className="font-bold" style={{ fontSize: `${rateFontSize}px`, color: rateNumberColor }}>₹{currentRates.silver_per_kg_sale}</p>
+                          <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">SALE RATE</p>
+                          <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.silver_per_kg_sale}</p>
                         </div>
                         <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                          <p className="font-semibold mb-1" style={{ fontSize: `${silverLabelFontSize - 2}px`, color: silverLabelColor }}>PURCHASE RATE</p>
-                          <p className="font-bold" style={{ fontSize: `${rateFontSize}px`, color: rateNumberColor }}>₹{currentRates.silver_per_kg_purchase}</p>
+                          <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">PURCHASE RATE</p>
+                          <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.silver_per_kg_purchase}</p>
                         </div>
                       </div>
                     </div>
