@@ -12,8 +12,8 @@ export async function createApp() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
 
-  // Serve static files from dist/public (built React frontend)
-  const publicDir = path.join(process.cwd(), "dist", "public");
+  // Serve static files from public (built React frontend)
+  const publicDir = path.join(process.cwd(), "public");
   app.use(express.static(publicDir));
 
   app.use((req, res, next) => {

@@ -1,7 +1,9 @@
 {
   "version": 2,
   "buildCommand": "npm run build && npm run build:vercel",
-  "outputDirectory": "dist/public",
+  "outputDirectory": "public",
+  "installCommand": "npm install",
+  "framework": null,
   "crons": [
     {
       "path": "/api/rates/sync-scheduled",
