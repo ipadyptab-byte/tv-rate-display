@@ -55,14 +55,7 @@ export default function AdminDashboard() {
       orientation: "horizontal",
       background_color: "#FFF8E1",
       text_color: "#212529",
-      rate_number_font_size: 36,
-      rate_number_color: "#1e40af",
-      gold_rate_label_font_size: 18,
-      gold_rate_label_color: "#1f2937",
-      silver_rate_label_font_size: 18,
-      silver_rate_label_color: "#1f2937",
-      header_font_size: 28,
-      header_color: "#000000",
+      rate_number_font_size: "text-4xl",
       show_media: true,
       rates_display_duration_seconds: 15,
       refresh_interval: 30,
@@ -77,14 +70,7 @@ export default function AdminDashboard() {
         orientation: settings.orientation || "horizontal",
         background_color: settings.background_color || "#FFF8E1",
         text_color: settings.text_color || "#212529",
-        rate_number_font_size: settings.rate_number_font_size || 36,
-        rate_number_color: settings.rate_number_color || "#1e40af",
-        gold_rate_label_font_size: settings.gold_rate_label_font_size || 18,
-        gold_rate_label_color: settings.gold_rate_label_color || "#1f2937",
-        silver_rate_label_font_size: settings.silver_rate_label_font_size || 18,
-        silver_rate_label_color: settings.silver_rate_label_color || "#1f2937",
-        header_font_size: settings.header_font_size || 28,
-        header_color: settings.header_color || "#000000",
+        rate_number_font_size: settings.rate_number_font_size || "text-4xl",
         show_media: settings.show_media ?? true,
         rates_display_duration_seconds: settings.rates_display_duration_seconds || 15,
         refresh_interval: settings.refresh_interval || 30,
@@ -262,164 +248,32 @@ export default function AdminDashboard() {
                     name="rate_number_font_size"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Rate Numbers Font Size (px)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min={12}
-                            max={120}
-                            value={field.value || 36} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 36)} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="rate_number_color"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Rate Numbers Color</FormLabel>
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="color"
-                            value={field.value || "#1e40af"}
-                            onChange={(e) => field.onChange(e.target.value)}
-                            className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
-                          />
+                        <FormLabel>Rate Numbers Font Size</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value || "text-4xl"}
+                        >
                           <FormControl>
-                            <Input {...field} value={field.value || ""} className="flex-1" />
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select font size" />
+                            </SelectTrigger>
                           </FormControl>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="gold_rate_label_font_size"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Gold Rate Label Font Size (px)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min={10}
-                            max={48}
-                            value={field.value || 18} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 18)} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="gold_rate_label_color"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Gold Rate Label Color</FormLabel>
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="color"
-                            value={field.value || "#1f2937"}
-                            onChange={(e) => field.onChange(e.target.value)}
-                            className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
-                          />
-                          <FormControl>
-                            <Input {...field} value={field.value || ""} className="flex-1" />
-                          </FormControl>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="silver_rate_label_font_size"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Silver Rate Label Font Size (px)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min={10}
-                            max={48}
-                            value={field.value || 18} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 18)} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="silver_rate_label_color"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Silver Rate Label Color</FormLabel>
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="color"
-                            value={field.value || "#1f2937"}
-                            onChange={(e) => field.onChange(e.target.value)}
-                            className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
-                          />
-                          <FormControl>
-                            <Input {...field} value={field.value || ""} className="flex-1" />
-                          </FormControl>
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="header_font_size"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Header Font Size (px)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            min={16}
-                            max={72}
-                            value={field.value || 28} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 28)} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="header_color"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Header Color</FormLabel>
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="color"
-                            value={field.value || "#000000"}
-                            onChange={(e) => field.onChange(e.target.value)}
-                            className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
-                          />
-                          <FormControl>
-                            <Input {...field} value={field.value || ""} className="flex-1" />
-                          </FormControl>
-                        </div>
+                          <SelectContent>
+                            <SelectItem value="text-2xl">
+                              Small (2XL)
+                            </SelectItem>
+                            <SelectItem value="text-3xl">
+                              Medium (3XL)
+                            </SelectItem>
+                            <SelectItem value="text-4xl">
+                              Large (4XL)
+                            </SelectItem>
+                            <SelectItem value="text-5xl">
+                              Extra Large (5XL)
+                            </SelectItem>
+                            <SelectItem value="text-6xl">Huge (6XL)</SelectItem>
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
