@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
-import path from "path";
 import postgres from "postgres";
 import { registerRoutes } from "./routes";
 import { log } from "./log";
@@ -11,10 +10,6 @@ export async function createApp() {
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
-
-  // Serve static files from public (built React frontend)
-  const publicDir = path.join(process.cwd(), "public");
-  app.use(express.static(publicDir));
 
   app.use((req, res, next) => {
     const start = Date.now();
@@ -36,7 +31,7 @@ export async function createApp() {
         }
 
         if (logLine.length > 80) {
-          logLine = logLine.slice(0, 79) + "…";
+          logLine = logLine.slice(0, 79) + "â€¦";
         }
 
         log(logLine);
@@ -90,15 +85,6 @@ export async function createApp() {
   });
 
   await registerRoutes(app);
-
-  // SPA fallback - serve index.html for any non-API routes (client-side routing)
-  app.get("*", (req, res, next) => {
-    if (req.path.startsWith("/api")) {
-      // Let API routes pass through to 404 handler
-      return next();
-    }
-    res.sendFile(path.join(publicDir, "index.html"));
-  });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
