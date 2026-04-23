@@ -1,14 +1,15 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist/public",
-  "functions": {
-    "api/index.ts": {
-      "runtime": "nodejs20.x"
-    },
-    "api/[...path].ts": {
-      "runtime": "nodejs20.x"
+  "version": 2,
+  "buildCommand": "npm run build && npm run build:vercel",
+  "outputDirectory": "public",
+  "installCommand": "npm install",
+  "framework": null,
+  "crons": [
+    {
+      "path": "/api/rates/sync-scheduled",
+      "schedule": "*/1 * * * *"
     }
-  },
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/[...path]" },
     { "source": "/(.*)", "destination": "/index.html" }

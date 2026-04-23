@@ -1,14 +1,20 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
+import path from "path";
 import postgres from "postgres";
 import { registerRoutes } from "./routes";
-import { log } from "./vite";
+import { log } from "./log";
+import { getDatabaseUrl } from "./db";
 
 export async function createApp() {
   const app = express();
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
+
+  // Serve static files from public (built React frontend)
+  const publicDir = path.join(process.cwd(), "public");
+  app.use(express.static(publicDir));
 
   app.use((req, res, next) => {
     const start = Date.now();
@@ -43,12 +49,12 @@ export async function createApp() {
   // Health check endpoint
   app.get("/api/health", async (_req, res) => {
     try {
-      const connectionString = process.env.DATABASE_URL;
+      const connectionString = getDatabaseUrl();
       if (!connectionString) {
         return res.status(500).json({
           status: "unhealthy",
           database: "disconnected",
-          error: "DATABASE_URL not set",
+          error: "Database URL not set (DATABASE_URL / POSTGRES_URL / NEON_DATABASE_URL)",
         });
       }
 
@@ -68,13 +74,31 @@ export async function createApp() {
   // Quick diagnostics
   app.get("/api/debug/env", (_req, res) => {
     res.json({
-      hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+      hasDatabaseUrl: Boolean(getDatabaseUrl()),
       nodeEnv: process.env.NODE_ENV,
       vercel: Boolean(process.env.VERCEL),
     });
   });
 
+  app.get("/api/version", (_req, res) => {
+    res.json({
+      vercel: Boolean(process.env.VERCEL),
+      gitCommitSha: process.env.VERCEL_GIT_COMMIT_SHA || null,
+      gitCommitRef: process.env.VERCEL_GIT_COMMIT_REF || null,
+      buildTime: new Date().toISOString(),
+    });
+  });
+
   await registerRoutes(app);
+
+  // SPA fallback - serve index.html for any non-API routes (client-side routing)
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api")) {
+      // Let API routes pass through to 404 handler
+      return next();
+    }
+    res.sendFile(path.join(publicDir, "index.html"));
+  });
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

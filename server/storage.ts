@@ -19,7 +19,7 @@ import {
   type InsertRateSettings
 } from "@shared/schema";
 import { eq, desc, asc } from "drizzle-orm";
-import { getDb } from "./db";
+import { ensureDbReady, getDb } from "./db";
 
 export interface IStorage {
   // Gold Rates
@@ -58,6 +58,7 @@ export interface IStorage {
 export class PostgresStorage implements IStorage {
   // Gold Rates
   async getCurrentRates(): Promise<GoldRate | undefined> {
+    await ensureDbReady();
     const rates = await getDb().select().from(goldRates)
       .where(eq(goldRates.is_active, true))
       .orderBy(desc(goldRates.created_date))
@@ -66,6 +67,7 @@ export class PostgresStorage implements IStorage {
   }
 
   async createGoldRate(rate: InsertGoldRate): Promise<GoldRate> {
+    await ensureDbReady();
     const db = getDb();
 
     // Deactivate all existing rates
@@ -76,6 +78,7 @@ export class PostgresStorage implements IStorage {
   }
 
   async updateGoldRate(id: number, rate: Partial<InsertGoldRate>): Promise<GoldRate | undefined> {
+    await ensureDbReady();
     const result = await getDb().update(goldRates)
       .set(rate)
       .where(eq(goldRates.id, id))
@@ -89,10 +92,12 @@ export class PostgresStorage implements IStorage {
 
 // Add to PostgresStorage class
 async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySettings> {
+  await ensureDbReady();
   const result = await getDb().insert(displaySettings).values(settings).returning();
   return result[0];
 } 
   async getDisplaySettings(): Promise<DisplaySettings | undefined> {
+    await ensureDbReady();
     const settings = await getDb().select().from(displaySettings)
       .orderBy(desc(displaySettings.created_date))
       .limit(1);
@@ -100,6 +105,7 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
   }
 
   async updateDisplaySettings(id: number, settings: Partial<InsertDisplaySettings>): Promise<DisplaySettings | undefined> {
+    await ensureDbReady();
     const result = await getDb().update(displaySettings)
       .set(settings)
       .where(eq(displaySettings.id, id))
@@ -109,6 +115,7 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
 
   // Rate Calculation Settings
   async getRateSettings(): Promise<RateSettings | undefined> {
+    await ensureDbReady();
     const settings = await getDb().select().from(rateSettings)
       .orderBy(desc(rateSettings.created_date))
       .limit(1);
@@ -116,11 +123,13 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
   }
 
   async createRateSettings(settings: InsertRateSettings): Promise<RateSettings> {
+    await ensureDbReady();
     const result = await getDb().insert(rateSettings).values(settings).returning();
     return result[0];
   }
 
   async updateRateSettings(id: number, settings: Partial<InsertRateSettings>): Promise<RateSettings | undefined> {
+    await ensureDbReady();
     const result = await getDb().update(rateSettings)
       .set(settings)
       .where(eq(rateSettings.id, id))
@@ -130,6 +139,7 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
 
   // Media Items
   async getMediaItems(activeOnly = false): Promise<MediaItem[]> {
+    await ensureDbReady();
     const db = getDb();
 
     if (activeOnly) {
@@ -143,11 +153,13 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
   }
 
   async createMediaItem(item: InsertMediaItem): Promise<MediaItem> {
+    await ensureDbReady();
     const result = await getDb().insert(mediaItems).values(item).returning();
     return result[0];
   }
 
   async updateMediaItem(id: number, item: Partial<InsertMediaItem>): Promise<MediaItem | undefined> {
+    await ensureDbReady();
     const result = await getDb().update(mediaItems)
       .set(item)
       .where(eq(mediaItems.id, id))
@@ -156,12 +168,14 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
   }
 
   async deleteMediaItem(id: number): Promise<boolean> {
+    await ensureDbReady();
     const result = await getDb().delete(mediaItems).where(eq(mediaItems.id, id)).returning();
     return result.length > 0;
   }
 
   // Promo Images
   async getPromoImages(activeOnly = false): Promise<PromoImage[]> {
+    await ensureDbReady();
     const db = getDb();
 
     if (activeOnly) {
@@ -175,11 +189,13 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
   }
 
   async createPromoImage(image: InsertPromoImage): Promise<PromoImage> {
+    await ensureDbReady();
     const result = await getDb().insert(promoImages).values(image).returning();
     return result[0];
   }
 
   async updatePromoImage(id: number, image: Partial<InsertPromoImage>): Promise<PromoImage | undefined> {
+    await ensureDbReady();
     const result = await getDb().update(promoImages)
       .set(image)
       .where(eq(promoImages.id, id))
@@ -188,12 +204,14 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
   }
 
   async deletePromoImage(id: number): Promise<boolean> {
+    await ensureDbReady();
     const result = await getDb().delete(promoImages).where(eq(promoImages.id, id)).returning();
     return result.length > 0;
   }
 
   // Banner Settings
   async getBannerSettings(): Promise<BannerSettings | undefined> {
+    await ensureDbReady();
     const banner = await getDb().select().from(bannerSettings)
       .where(eq(bannerSettings.is_active, true))
       .orderBy(desc(bannerSettings.created_date))
@@ -202,11 +220,13 @@ async createDisplaySettings(settings: InsertDisplaySettings): Promise<DisplaySet
   }
 
   async createBannerSettings(banner: InsertBannerSettings): Promise<BannerSettings> {
+    await ensureDbReady();
     const result = await getDb().insert(bannerSettings).values(banner).returning();
     return result[0];
   }
 
   async updateBannerSettings(id: number, banner: Partial<InsertBannerSettings>): Promise<BannerSettings | undefined> {
+    await ensureDbReady();
     const result = await getDb().update(bannerSettings)
       .set(banner)
       .where(eq(bannerSettings.id, id))

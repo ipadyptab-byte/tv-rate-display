@@ -52,7 +52,7 @@ export default function RateSync() {
       perc_18k_sale: 0.860,
       perc_18k_purchase: 0.800,
       silver_purchase_offset: -5000,
-      check_interval_minutes: 5,
+      check_interval_minutes: 1,
     },
   });
 
@@ -65,7 +65,7 @@ export default function RateSync() {
         perc_18k_sale: rateSettings.perc_18k_sale ?? 0.860,
         perc_18k_purchase: rateSettings.perc_18k_purchase ?? 0.800,
         silver_purchase_offset: rateSettings.silver_purchase_offset ?? -5000,
-        check_interval_minutes: rateSettings.check_interval_minutes ?? 5,
+        check_interval_minutes: rateSettings.check_interval_minutes ?? 1,
       });
     }
   }, [rateSettings, form]);
@@ -89,7 +89,7 @@ export default function RateSync() {
 
   const syncMutation = useMutation({
     mutationFn: async () => {
-      return await ratesApi.sync();
+      return await ratesApi.sync({ force: true });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rates/current"] });
@@ -99,6 +99,36 @@ export default function RateSync() {
       toast({ title: "Sync failed", description: error.message, variant: "destructive" });
     }
   });
+
+  const autoSyncMutation = useMutation({
+    mutationFn: async () => {
+      return await ratesApi.sync({ force: false });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/rates/current"] });
+    },
+  });
+
+  // Auto sync while this page is open (respects interval)
+  React.useEffect(() => {
+    const minutes = rateSettings?.check_interval_minutes ?? 5;
+    const delayMs = Math.max(1, minutes) * 60_000;
+
+    const tick = () => {
+      if (!autoSyncMutation.isPending) {
+        autoSyncMutation.mutate();
+      }
+    };
+
+    // Run once immediately when settings are known, then on interval.
+    if (rateSettings) {
+      tick();
+    }
+
+    const interval = setInterval(tick, delayMs);
+
+    return () => clearInterval(interval);
+  }, [rateSettings?.check_interval_minutes, rateSettings?.id]);
 
   const onSubmit = (data: z.infer<typeof rateSettingsSchema>) => {
     saveMutation.mutate(data);

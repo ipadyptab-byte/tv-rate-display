@@ -11,6 +11,7 @@ import {
   insertPromoImageSchema,
   insertBannerSettingsSchema,
 } from "@shared/schema";
+import { syncRatesFromExternal } from "./ratesSync";
 
 // Configure multer for memory storage (no file system)
 const memoryStorage = multer.memoryStorage();
@@ -166,6 +167,10 @@ export async function registerRoutes(app: Express): Promise<void> {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid rate data", errors: error.errors });
       } else {
+<<<<<<< HEAD
+=======
+        console.error("Create rates error:", error);
+>>>>>>> main
         res.status(500).json({ message: "Failed to create rates", error: (error as Error).message });
       }
     }
@@ -182,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         perc_18k_sale: 0.86,
         perc_18k_purchase: 0.80,
         silver_purchase_offset: -5000,
-        check_interval_minutes: 5
+        check_interval_minutes: 1
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch rate settings" });
@@ -223,57 +228,31 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   // Fetch and store rates from external API
   // GET /api/rates/sync - fetches latest 24k sale and silver sale, computes others via settings, stores to Postgres
-  app.get("/api/rates/sync", async (_req, res) => {
+  app.get("/api/rates/sync", async (req, res) => {
     try {
-      const apiUrl = "https://www.businessmantra.info/gold_rates/devi_gold_rate/api.php";
-      const resp = await fetch(apiUrl, { cache: "no-store" });
-      if (!resp.ok) {
-        return res.status(502).json({ message: "Failed to fetch external rates", status: resp.status });
-      }
-      const data = await resp.json() as Record<string, number>;
-
-      // Only use 24k sale and silver sale from API
-      const gold24kSale = Number(data["24K Gold"]);
-      const silverSale = Number(data["Silver"]);
-
-      if (!Number.isFinite(gold24kSale) || !Number.isFinite(silverSale)) {
-        return res.status(400).json({ message: "API missing required fields: 24K Gold or Silver" });
-      }
-
-      // Load calculation settings (with defaults)
-      const calc = await storage.getRateSettings();
-      const perc_24k_purchase = calc?.perc_24k_purchase ?? 0.985;
-      const perc_22k_sale = calc?.perc_22k_sale ?? 0.92;
-      const perc_22k_purchase = calc?.perc_22k_purchase ?? 0.90;
-      const perc_18k_sale = calc?.perc_18k_sale ?? 0.86;
-      const perc_18k_purchase = calc?.perc_18k_purchase ?? 0.80;
-      const silver_purchase_offset = calc?.silver_purchase_offset ?? -5000;
-
-      // Silver from API is per 10 grams, convert to per kg (1000g / 10g = 100x)
-      const silverPerKgSale = silverSale * 100;
-
-      const round10 = (n: number) => Math.round(n / 10) * 10;
-
-      const payload = {
-        gold_24k_sale: round10(gold24kSale),
-        gold_24k_purchase: round10(gold24kSale * perc_24k_purchase),
-        gold_22k_sale: round10(gold24kSale * perc_22k_sale),
-        gold_22k_purchase: round10(gold24kSale * perc_22k_purchase),
-        gold_18k_sale: round10(gold24kSale * perc_18k_sale),
-        gold_18k_purchase: round10(gold24kSale * perc_18k_purchase),
-        silver_per_kg_sale: round10(silverPerKgSale),
-        silver_per_kg_purchase: round10(silverPerKgSale + silver_purchase_offset),
-        is_active: true,
-      };
-
-      const validatedData = insertGoldRateSchema.parse(payload);
-      const newRates = await storage.createGoldRate(validatedData);
-
+      const force = req.query.force !== "0";
+      const newRates = await syncRatesFromExternal(storage, { force });
       res.status(201).json({ message: "Rates synced", rates: newRates });
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid computed rate data", errors: error.errors });
       } else {
+        console.error("Rates sync error:", error);
+        res.status(500).json({ message: "Failed to sync rates", error: (error as Error).message });
+      }
+    }
+  });
+
+  // Cron-friendly endpoint (no query-string). Only syncs if the interval is due.
+  app.get("/api/rates/sync-scheduled", async (_req, res) => {
+    try {
+      const newRates = await syncRatesFromExternal(storage, { force: false });
+      res.status(200).json({ message: "Scheduled sync checked", rates: newRates });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid computed rate data", errors: error.errors });
+      } else {
+        console.error("Rates scheduled sync error:", error);
         res.status(500).json({ message: "Failed to sync rates", error: (error as Error).message });
       }
     }

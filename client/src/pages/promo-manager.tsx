@@ -139,16 +139,18 @@ export default function PromoManager() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
+      {/* Common Header - matches Mobile Control page */}
+      <div className="bg-gradient-to-r from-gold-600 to-gold-700 text-black p-4 flex justify-center">
+        <img 
+          src="/logo.jpeg" 
+          alt="Logo"
+          className="h-40 w-[350px] object-contain"
+        />
+      </div>
+      <div className="max-w-6xl mx-auto p-4">
+        {/* Page Title */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl flex items-center justify-center">
-              <i className="fas fa-bullhorn text-white text-xl"></i>
-            </div>
-            {/* Logo-only branding */}
-          </div>
           <h2 className="text-xl font-semibold text-gray-700">Promotional Manager</h2>
           <p className="text-gray-600">Manage slideshow images displayed below silver rates on TV</p>
         </div>
@@ -235,11 +237,11 @@ export default function PromoManager() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {promoImages.map((item) => (
             <Card key={item.id} className={`overflow-hidden ${item.is_active ? 'border-2 border-purple-500' : 'border border-gray-200 opacity-75'}`}>
-              <div className="relative aspect-video bg-black">
+              <div className="relative aspect-video bg-gray-100">
                 <img 
                   src={item.image_url || ""} 
                   alt={item.name}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover"
                   data-testid={`promo-image-${item.id}`}
                 />
                 
@@ -352,13 +354,13 @@ export default function PromoManager() {
           <CardContent className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Preview Window */}
-              <div className="relative bg-black rounded-lg overflow-hidden aspect-video">
+              <div className="relative bg-gray-100 rounded-lg overflow-hidden aspect-video">
                 {activePromos.length > 0 ? (
                   <>
                     <img 
                       src={activePromos[currentPreviewIndex]?.image_url || ""} 
                       alt="Slideshow preview" 
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-cover"
                       data-testid="slideshow-preview-image"
                     />
                     
