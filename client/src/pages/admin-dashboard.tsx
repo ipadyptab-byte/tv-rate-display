@@ -62,6 +62,36 @@ export default function AdminDashboard() {
     },
   });
 
+  // Utility to calculate luminance for contrast
+  const getLuminance = (hex: string): number => {
+    const rgb = hex.replace('#', '').match(/.{2}/g);
+    if (!rgb) return 0;
+    const [r, g, b] = rgb.map(c => {
+      const val = parseInt(c, 16) / 255;
+      return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+
+  const getContrastRatio = (foreground: string, background: string): number => {
+    const l1 = getLuminance(foreground);
+    const l2 = getLuminance(background);
+    const lighter = Math.max(l1, l2);
+    const darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  };
+
+  const getContrastRating = (ratio: number): { label: string; color: string } => {
+    if (ratio >= 7) return { label: "Excellent", color: "text-green-600" };
+    if (ratio >= 4.5) return { label: "Good", color: "text-yellow-600" };
+    return { label: "Poor", color: "text-red-600" };
+  };
+
+  const watchedBgColor = form.watch("background_color");
+  const watchedTextColor = form.watch("text_color");
+  const contrastRatio = getContrastRatio(watchedTextColor, watchedBgColor);
+  const contrastRating = getContrastRating(contrastRatio);
+
   // Update form when settings load
   React.useEffect(() => {
     if (settings) {
@@ -379,6 +409,48 @@ export default function AdminDashboard() {
                           }}
                         />
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Contrast Indicator */}
+                  <div className="mt-4 p-4 rounded-lg border" style={{ backgroundColor: "#f8fafc", borderColor: "#e2e8f0" }}>
+                    <FormLabel className="mb-2">Contrast Rating</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <div className={`font-semibold ${contrastRating.color}`}>
+                        {contrastRating.label}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {contrastRatio.toFixed(2)}:1
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                      <div 
+                        className="h-2 rounded-full transition-all"
+                        style={{ 
+                          width: `${Math.min(100, (contrastRatio / 21) * 100)}%`,
+                          backgroundColor: contrastRatio >= 7 ? "#22c55e" : contrastRatio >= 4.5 ? "#eab308" : "#ef4444"
+                        }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      WCAG AA requires 4.5:1, AAA requires 7:1
+                    </p>
+                  </div>
+
+                  {/* Live Preview */}
+                  <div className="mt-4">
+                    <FormLabel className="mb-2">Live Preview</FormLabel>
+                    <div 
+                      className="p-4 rounded-lg border"
+                      style={{ 
+                        backgroundColor: watchedBgColor || "#FFF8E1",
+                        color: watchedTextColor || "#212529"
+                      }}
+                    >
+                      <div className="text-center">
+                        <p className="text-xs font-semibold mb-1">SALE RATE</p>
+                        <p className="text-2xl font-bold">₹153,000</p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

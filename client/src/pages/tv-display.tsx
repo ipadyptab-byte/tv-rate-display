@@ -4,6 +4,37 @@ import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { ratesApi, promoApi, mediaApi, bannerApi, settingsApi } from "@/lib/api";
 
+// Utility function to calculate relative luminance
+const getLuminance = (hex: string): number => {
+  const rgb = hex.replace('#', '').match(/.{2}/g);
+  if (!rgb) return 0;
+  const [r, g, b] = rgb.map(c => {
+    const val = parseInt(c, 16) / 255;
+    return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+// Function to determine if a color is light or dark
+const isLightColor = (hex: string): boolean => {
+  return getLuminance(hex) > 0.5;
+};
+
+// Get contrasting rate number color based on background
+const getRateNumberColor = (backgroundColor: string): string => {
+  return isLightColor(backgroundColor) ? "#1a365d" : "#ffffff";
+};
+
+// Get contrasting label color based on background
+const getRateLabelColor = (backgroundColor: string): string => {
+  return isLightColor(backgroundColor) ? "#2c5282" : "#e2e8f0";
+};
+
+// Get contrasting box background color based on background
+const getRateBoxBg = (backgroundColor: string): string => {
+  return isLightColor(backgroundColor) ? "#edf2f7" : "#2d3748";
+};
+
 export default function TVDisplay() {
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
@@ -222,19 +253,19 @@ export default function TVDisplay() {
                   {/* 24K Gold */}
                   <div className="rate-card bg-white rounded-lg md:rounded-xl shadow-md md:shadow-xl p-3 md:p-6 border-l-4 md:border-l-8 border-jewelry-primary fade-in">
                     <div className="flex justify-between items-center mb-2 md:mb-4">
-                      <h4 className="text-lg md:text-2xl font-bold text-gray-800">24K GOLD</h4>
+                      <h4 className="text-lg md:text-2xl font-bold" style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1") }}>24K GOLD</h4>
                       <div className="w-8 h-8 md:w-10 md:h-10 bg-jewelry-primary rounded-full gold-shimmer flex items-center justify-center">
                         <i className="fas fa-star text-white text-sm md:text-base"></i>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 md:gap-4">
-                      <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">SALE RATE</p>
-                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_24k_sale}</p>
+                      <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                        <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1") }}>SALE RATE</p>
+                        <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1") }}>₹{currentRates.gold_24k_sale}</p>
                       </div>
-                      <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">PURCHASE RATE</p>
-                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_24k_purchase}</p>
+                      <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                        <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1") }}>PURCHASE RATE</p>
+                        <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1") }}>₹{currentRates.gold_24k_purchase}</p>
                       </div>
                     </div>
                   </div>
@@ -242,19 +273,19 @@ export default function TVDisplay() {
                   {/* 22K Gold */}
                   <div className="rate-card bg-white rounded-lg md:rounded-xl shadow-md md:shadow-xl p-3 md:p-6 border-l-4 md:border-l-8 border-jewelry-primary fade-in">
                     <div className="flex justify-between items-center mb-2 md:mb-4">
-                      <h4 className="text-lg md:text-2xl font-bold text-gray-800">22K GOLD</h4>
+                      <h4 className="text-lg md:text-2xl font-bold" style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1") }}>22K GOLD</h4>
                       <div className="w-8 h-8 md:w-10 md:h-10 bg-jewelry-primary rounded-full gold-shimmer flex items-center justify-center">
                         <i className="fas fa-crown text-white text-sm md:text-base"></i>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 md:gap-4">
-                      <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">SALE RATE</p>
-                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_22k_sale}</p>
+                      <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                        <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1") }}>SALE RATE</p>
+                        <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1") }}>₹{currentRates.gold_22k_sale}</p>
                       </div>
-                      <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">PURCHASE RATE</p>
-                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_22k_purchase}</p>
+                      <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                        <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1") }}>PURCHASE RATE</p>
+                        <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1") }}>₹{currentRates.gold_22k_purchase}</p>
                       </div>
                     </div>
                   </div>
@@ -262,19 +293,19 @@ export default function TVDisplay() {
                   {/* 18K Gold */}
                   <div className="rate-card bg-white rounded-lg md:rounded-xl shadow-md md:shadow-xl p-3 md:p-6 border-l-4 md:border-l-8 border-jewelry-primary fade-in">
                     <div className="flex justify-between items-center mb-2 md:mb-4">
-                      <h4 className="text-lg md:text-2xl font-bold text-gray-800">18K GOLD</h4>
+                      <h4 className="text-lg md:text-2xl font-bold" style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1") }}>18K GOLD</h4>
                       <div className="w-8 h-8 md:w-10 md:h-10 bg-jewelry-primary rounded-full gold-shimmer flex items-center justify-center">
                         <i className="fas fa-crown text-white text-sm md:text-base"></i>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 md:gap-4">
-                      <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">SALE RATE</p>
-                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_18k_sale}</p>
+                      <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                        <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1") }}>SALE RATE</p>
+                        <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1") }}>₹{currentRates.gold_18k_sale}</p>
                       </div>
-                      <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">PURCHASE RATE</p>
-                        <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.gold_18k_purchase}</p>
+                      <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                        <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1") }}>PURCHASE RATE</p>
+                        <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1") }}>₹{currentRates.gold_18k_purchase}</p>
                       </div>
                     </div>
                   </div>
@@ -284,23 +315,23 @@ export default function TVDisplay() {
                 <div className="space-y-4 md:space-y-6">
                   {/* Silver Rates */}
                   <div>
-                    <h3 className="text-lg md:text-2xl font-display font-bold text-center text-jewelry-primary mb-4 md:mb-6">SILVER RATES (Per KG)</h3>
+                    <h3 className="text-lg md:text-2xl font-display font-bold text-center mb-4 md:mb-6" style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1") }}>SILVER RATES (Per KG)</h3>
                     
                     <div className="rate-card bg-white rounded-lg md:rounded-xl shadow-md md:shadow-xl p-3 md:p-6 border-l-4 md:border-l-8 border-jewelry-primary fade-in">
                       <div className="flex justify-between items-center mb-2 md:mb-4">
-                        <h4 className="text-lg md:text-2xl font-bold text-gray-800">SILVER</h4>
+                        <h4 className="text-lg md:text-2xl font-bold" style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1") }}>SILVER</h4>
                         <div className="w-8 h-8 md:w-10 md:h-10 bg-jewelry-primary rounded-full shadow-lg flex items-center justify-center">
                           <i className="fas fa-circle text-white text-sm md:text-base"></i>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-2 md:gap-4">
-                        <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                          <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">SALE RATE</p>
-                          <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.silver_per_kg_sale}</p>
+                        <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                          <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1") }}>SALE RATE</p>
+                          <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1") }}>₹{currentRates.silver_per_kg_sale}</p>
                         </div>
-                        <div className="text-center p-2 md:p-4 bg-blue-50 rounded-lg border border-blue-200">
-                          <p className="text-xs md:text-sm text-blue-600 font-semibold mb-1">PURCHASE RATE</p>
-                          <p className={`${rateFontSize} font-bold text-blue-800`}>₹{currentRates.silver_per_kg_purchase}</p>
+                        <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                          <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1") }}>PURCHASE RATE</p>
+                          <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1") }}>₹{currentRates.silver_per_kg_purchase}</p>
                         </div>
                       </div>
                     </div>
