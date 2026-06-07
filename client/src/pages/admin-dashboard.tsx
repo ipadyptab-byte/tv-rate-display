@@ -166,6 +166,22 @@ export default function AdminDashboard() {
       name: "Purple Theme",
       colors: { background: "#F3E5F5", text: "#6A1B9A", accent: "#9C27B0" },
     },
+    {
+      name: "Dark Gold",
+      colors: { background: "#1a1a2e", text: "#FFD700", accent: "#FFC107" },
+    },
+    {
+      name: "Dark Blue",
+      colors: { background: "#0f172a", text: "#38bdf8", accent: "#2196F3" },
+    },
+    {
+      name: "Dark Green",
+      colors: { background: "#052e16", text: "#4ade80", accent: "#4CAF50" },
+    },
+    {
+      name: "Pure Black",
+      colors: { background: "#000000", text: "#FFFFFF", accent: "#FFD700" },
+    },
   ];
 
   if (isLoading) {
@@ -437,19 +453,74 @@ export default function AdminDashboard() {
                     </p>
                   </div>
 
-                  {/* Live Preview */}
+                  {/* Live Preview - Enhanced TV Display Preview */}
                   <div className="mt-4">
-                    <FormLabel className="mb-2">Live Preview</FormLabel>
+                    <FormLabel className="mb-2">Live TV Display Preview</FormLabel>
                     <div 
-                      className="p-4 rounded-lg border"
+                      className="rounded-lg border overflow-hidden"
                       style={{ 
                         backgroundColor: watchedBgColor || "#FFF8E1",
                         color: watchedTextColor || "#212529"
                       }}
                     >
-                      <div className="text-center">
-                        <p className="text-xs font-semibold mb-1">SALE RATE</p>
-                        <p className="text-2xl font-bold">₹153,000</p>
+                      {/* Header */}
+                      <div className="bg-gradient-to-r from-amber-600 to-amber-700 text-white p-2 text-center">
+                        <p className="text-xs font-semibold">DEVI JEWELLERS</p>
+                        <p className="text-[8px] opacity-80">Last Updated: {new Date().toLocaleTimeString()}</p>
+                      </div>
+                      
+                      {/* Gold Rates Section */}
+                      <div className="p-3 space-y-2">
+                        {/* 24K Gold */}
+                        <div className="rounded border" style={{ borderColor: isLightColor(watchedBgColor || "#FFF8E1") ? "#d1d5db" : "#4b5563" }}>
+                          <div className="p-2 border-b flex justify-between items-center" style={{ backgroundColor: isLightColor(watchedBgColor || "#FFF8E1") ? "#fef3c7" : "#78350f" }}>
+                            <span className="font-bold text-sm" style={{ color: watchedTextColor || "#212529" }}>★ 24K GOLD (Per 10 GMS)</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 p-2">
+                            <div className="text-center p-2 rounded" style={{ backgroundColor: isLightColor(watchedBgColor || "#FFF8E1") ? "#f3f4f6" : "#374151" }}>
+                              <p className="text-[8px] font-semibold" style={{ color: watchedTextColor || "#212529" }}>SALE RATE</p>
+                              <p className="text-lg font-bold" style={{ color: watchedTextColor || "#212529" }}>₹153,000</p>
+                            </div>
+                            <div className="text-center p-2 rounded" style={{ backgroundColor: isLightColor(watchedBgColor || "#FFF8E1") ? "#f3f4f6" : "#374151" }}>
+                              <p className="text-[8px] font-semibold" style={{ color: watchedTextColor || "#212529" }}>PURCHASE RATE</p>
+                              <p className="text-lg font-bold" style={{ color: watchedTextColor || "#212529" }}>₹151,500</p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* 22K Gold */}
+                        <div className="rounded border" style={{ borderColor: isLightColor(watchedBgColor || "#FFF8E1") ? "#d1d5db" : "#4b5563" }}>
+                          <div className="p-2 border-b flex justify-between items-center" style={{ backgroundColor: isLightColor(watchedBgColor || "#FFF8E1") ? "#fef3c7" : "#78350f" }}>
+                            <span className="font-bold text-sm" style={{ color: watchedTextColor || "#212529" }}>◆ 22K GOLD (Per 10 GMS)</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 p-2">
+                            <div className="text-center p-2 rounded" style={{ backgroundColor: isLightColor(watchedBgColor || "#FFF8E1") ? "#f3f4f6" : "#374151" }}>
+                              <p className="text-[8px] font-semibold" style={{ color: watchedTextColor || "#212529" }}>SALE RATE</p>
+                              <p className="text-lg font-bold" style={{ color: watchedTextColor || "#212529" }}>₹140,760</p>
+                            </div>
+                            <div className="text-center p-2 rounded" style={{ backgroundColor: isLightColor(watchedBgColor || "#FFF8E1") ? "#f3f4f6" : "#374151" }}>
+                              <p className="text-[8px] font-semibold" style={{ color: watchedTextColor || "#212529" }}>PURCHASE RATE</p>
+                              <p className="text-lg font-bold" style={{ color: watchedTextColor || "#212529" }}>₹139,260</p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Silver */}
+                        <div className="rounded border" style={{ borderColor: isLightColor(watchedBgColor || "#FFF8E1") ? "#d1d5db" : "#4b5563" }}>
+                          <div className="p-2 border-b flex justify-between items-center" style={{ backgroundColor: isLightColor(watchedBgColor || "#FFF8E1") ? "#f3f4f6" : "#1f2937" }}>
+                            <span className="font-bold text-sm" style={{ color: watchedTextColor || "#212529" }}>● SILVER (Per KG)</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 p-2">
+                            <div className="text-center p-2 rounded" style={{ backgroundColor: isLightColor(watchedBgColor || "#FFF8E1") ? "#f3f4f6" : "#374151" }}>
+                              <p className="text-[8px] font-semibold" style={{ color: watchedTextColor || "#212529" }}>SALE RATE</p>
+                              <p className="text-lg font-bold" style={{ color: watchedTextColor || "#212529" }}>₹250,000</p>
+                            </div>
+                            <div className="text-center p-2 rounded" style={{ backgroundColor: isLightColor(watchedBgColor || "#FFF8E1") ? "#f3f4f6" : "#374151" }}>
+                              <p className="text-[8px] font-semibold" style={{ color: watchedTextColor || "#212529" }}>PURCHASE RATE</p>
+                              <p className="text-lg font-bold" style={{ color: watchedTextColor || "#212529" }}>₹248,500</p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
