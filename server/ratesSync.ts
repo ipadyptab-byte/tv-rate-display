@@ -8,9 +8,41 @@ const externalRatesSchema = z.object({
 });
 
 function roundRate(value: number): number {
-  // Keep as integer rupees unless the upstream has decimals.
   const rounded = Math.round(value);
   return Number.isFinite(rounded) ? rounded : value;
+}
+
+function calculateAllRates(gold24Sale: number, silverSale: number, settings: any) {
+  const perc24Purchase = settings?.perc_24k_purchase ?? 0.985;
+  const perc22Sale = settings?.perc_22k_sale ?? 0.92;
+  const perc22Purchase = settings?.perc_22k_purchase ?? 0.9;
+  const perc18Sale = settings?.perc_18k_sale ?? 0.86;
+  const perc18Purchase = settings?.perc_18k_purchase ?? 0.8;
+  const silverPurchaseOffset = settings?.silver_purchase_offset ?? -5000;
+
+  return {
+    gold_24k_sale: gold24Sale,
+    gold_24k_purchase: roundRate(gold24Sale * perc24Purchase),
+    gold_22k_sale: roundRate(gold24Sale * perc22Sale),
+    gold_22k_purchase: roundRate(gold24Sale * perc22Purchase),
+    gold_18k_sale: roundRate(gold24Sale * perc18Sale),
+    gold_18k_purchase: roundRate(gold24Sale * perc18Purchase),
+    silver_per_kg_sale: silverSale,
+    silver_per_kg_purchase: roundRate(silverSale + silverPurchaseOffset),
+  };
+}
+
+function ratesAreEqual(ratesA: any, ratesB: any): boolean {
+  return (
+    ratesA.gold_24k_sale === ratesB.gold_24k_sale &&
+    ratesA.gold_24k_purchase === ratesB.gold_24k_purchase &&
+    ratesA.gold_22k_sale === ratesB.gold_22k_sale &&
+    ratesA.gold_22k_purchase === ratesB.gold_22k_purchase &&
+    ratesA.gold_18k_sale === ratesB.gold_18k_sale &&
+    ratesA.gold_18k_purchase === ratesB.gold_18k_purchase &&
+    ratesA.silver_per_kg_sale === ratesB.silver_per_kg_sale &&
+    ratesA.silver_per_kg_purchase === ratesB.silver_per_kg_purchase
+  );
 }
 
 export async function syncRatesFromExternal(
@@ -44,22 +76,31 @@ export async function syncRatesFromExternal(
   const gold24Sale = roundRate(payload.gold_24k_sale);
   const silverSale = roundRate(payload.silver_per_kg_sale);
 
-  const perc24Purchase = settings?.perc_24k_purchase ?? 0.985;
-  const perc22Sale = settings?.perc_22k_sale ?? 0.92;
-  const perc22Purchase = settings?.perc_22k_purchase ?? 0.9;
-  const perc18Sale = settings?.perc_18k_sale ?? 0.86;
-  const perc18Purchase = settings?.perc_18k_purchase ?? 0.8;
-  const silverPurchaseOffset = settings?.silver_purchase_offset ?? -5000;
+  // Calculate all rates from external data
+  const newRates = calculateAllRates(gold24Sale, silverSale, settings);
 
+  // Check if rates have changed from current database rates
+  if (current && !opts.force) {
+    const currentRates = {
+      gold_24k_sale: current.gold_24k_sale,
+      gold_24k_purchase: current.gold_24k_purchase,
+      gold_22k_sale: current.gold_22k_sale,
+      gold_22k_purchase: current.gold_22k_purchase,
+      gold_18k_sale: current.gold_18k_sale,
+      gold_18k_purchase: current.gold_18k_purchase,
+      silver_per_kg_sale: current.silver_per_kg_sale,
+      silver_per_kg_purchase: current.silver_per_kg_purchase,
+    };
+
+    if (ratesAreEqual(currentRates, newRates)) {
+      console.log("Rates unchanged, skipping database update");
+      return current;
+    }
+  }
+
+  // Rates are different, create new record and update file
   const created = await storage.createGoldRate({
-    gold_24k_sale: gold24Sale,
-    gold_24k_purchase: roundRate(gold24Sale * perc24Purchase),
-    gold_22k_sale: roundRate(gold24Sale * perc22Sale),
-    gold_22k_purchase: roundRate(gold24Sale * perc22Purchase),
-    gold_18k_sale: roundRate(gold24Sale * perc18Sale),
-    gold_18k_purchase: roundRate(gold24Sale * perc18Purchase),
-    silver_per_kg_sale: silverSale,
-    silver_per_kg_purchase: roundRate(silverSale + silverPurchaseOffset),
+    ...newRates,
     is_active: true,
   });
 
