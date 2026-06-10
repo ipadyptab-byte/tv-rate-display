@@ -1,0 +1,22 @@
+# Render Blueprint
+# Deploy on Render: https://render.com/deploy?repo=https://github.com/ipadyptab-byte/tv-rate-display
+
+services:
+  - type: web
+    name: tv-rate-display
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: npm run build && npm run build:render
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      # Add these in Render dashboard:
+      - key: NEON_DATABASE_URL
+        sync: false
+      - key: EXTERNAL_RATES_URL
+        sync: false
