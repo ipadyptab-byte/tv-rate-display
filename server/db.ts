@@ -1,9 +1,8 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import pg from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
+const { Pool } = pg;
 
 let pool: Pool | null = null;
 let db: ReturnType<typeof drizzle> | null = null;
@@ -102,7 +101,7 @@ function init() {
 
   const connectionString = getDatabaseUrl();
   if (!connectionString) {
-    throw new Error("Database URL not set. Set DATABASE_URL (or POSTGRES_URL / NEON_DATABASE_URL).");
+    throw new Error("Database URL not set. Set DATABASE_URL (or POSTGRES_URL / POSTGRES_PRISMA_URL).");
   }
 
   pool = new Pool({ connectionString });

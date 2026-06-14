@@ -49,7 +49,7 @@ export async function createApp() {
         return res.status(500).json({
           status: "unhealthy",
           database: "disconnected",
-          error: "Database URL not set (DATABASE_URL / POSTGRES_URL / NEON_DATABASE_URL)",
+          error: "Database URL not set (DATABASE_URL / POSTGRES_URL / POSTGRES_PRISMA_URL)",
         });
       }
 
