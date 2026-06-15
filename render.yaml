@@ -16,7 +16,7 @@ services:
       - key: PORT
         value: 3000
       # Add these in Render dashboard:
-      - key: NEON_DATABASE_URL
+      - key: DATABASE_URL
         sync: false
       - key: EXTERNAL_RATES_URL
         sync: false
