@@ -84,6 +84,55 @@ export async function createApp() {
     });
   });
 
+  // Detailed database diagnostics
+  app.get("/api/debug/db", async (_req, res) => {
+    try {
+      const connectionString = getDatabaseUrl();
+      if (!connectionString) {
+        return res.json({
+          error: "No DATABASE_URL set",
+          envVars: {
+            DATABASE_URL: process.env.DATABASE_URL ? "[SET]" : null,
+            POSTGRES_URL: process.env.POSTGRES_URL ? "[SET]" : null,
+            POSTGRES_PRISMA_URL: process.env.POSTGRES_PRISMA_URL ? "[SET]" : null,
+          }
+        });
+      }
+
+      // Parse connection string to show host (not password)
+      const url = new URL(connectionString);
+      const debugInfo = {
+        host: url.host,
+        port: url.port,
+        database: url.pathname.replace("/", ""),
+        user: url.username,
+        hasPassword: Boolean(url.password),
+        ssl: connectionString.includes("sslmode=require"),
+      };
+
+      const client = postgres(connectionString);
+      const result = await client`SELECT version() as version, now() as time`;
+      await client.end();
+
+      res.json({
+        connection: debugInfo,
+        query: {
+          success: true,
+          version: result[0].version.split(",")[0],
+          time: result[0].time,
+        }
+      });
+    } catch (error: any) {
+      res.json({
+        connection: "failed",
+        error: error.message,
+        code: error.code,
+        errno: error.errno,
+        hostname: error.hostname,
+      });
+    }
+  });
+
   await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
