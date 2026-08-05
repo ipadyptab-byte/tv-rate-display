@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import express from "express";
 import { storage } from "./storage";
+import { ensureDbReady, getDb } from "./db";
 import multer from "multer";
 import { z } from "zod";
 import path from "path";
@@ -10,6 +11,7 @@ import {
   insertMediaItemSchema,
   insertPromoImageSchema,
   insertBannerSettingsSchema,
+  goldRates,
 } from "@shared/schema";
 import { syncRatesFromExternal } from "./ratesSync";
 
@@ -282,6 +284,27 @@ export async function registerRoutes(app: Express): Promise<void> {
         console.error("Rates scheduled sync error:", error);
         res.status(500).json({ message: "Failed to sync rates", error: (error as Error).message });
       }
+    }
+  });
+
+  // Database health check
+  app.get("/api/db-health", async (_req, res) => {
+    try {
+      await ensureDbReady();
+      const db = getDb();
+      const result = await db.select().from(goldRates).limit(100);
+      res.json({ 
+        status: "connected", 
+        table_exists: true, 
+        row_count: result.length,
+        db_url: getDatabaseUrl() ? "configured" : "missing",
+        sample_data: result.slice(0, 3)
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        status: "error", 
+        error: (error as Error).message 
+      });
     }
   });
 

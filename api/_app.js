@@ -151,7 +151,7 @@ var { Pool } = pg;
 var pool = null;
 var db = null;
 var initPromise = null;
-function getDatabaseUrl() {
+function getDatabaseUrl2() {
   return process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_PRISMA_URL;
 }
 async function ensureSchema(client) {
@@ -233,7 +233,7 @@ async function ensureSchema(client) {
 }
 function init() {
   if (db && initPromise) return;
-  const connectionString = getDatabaseUrl();
+  const connectionString = getDatabaseUrl2();
   if (!connectionString) {
     throw new Error("Database URL not set. Set DATABASE_URL (or POSTGRES_URL / POSTGRES_PRISMA_URL).");
   }
@@ -739,6 +739,25 @@ async function registerRoutes(app) {
       }
     }
   });
+  app.get("/api/db-health", async (_req, res) => {
+    try {
+      await ensureDbReady();
+      const db2 = getDb();
+      const result = await db2.select().from(goldRates).limit(100);
+      res.json({
+        status: "connected",
+        table_exists: true,
+        row_count: result.length,
+        db_url: getDatabaseUrl() ? "configured" : "missing",
+        sample_data: result.slice(0, 3)
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: "error",
+        error: error.message
+      });
+    }
+  });
   app.get("/api/settings/display", async (req, res) => {
     try {
       const settings = await storage.getDisplaySettings();
@@ -1093,7 +1112,7 @@ async function createApp() {
   });
   app.get("/api/health", async (_req, res) => {
     try {
-      const connectionString = getDatabaseUrl();
+      const connectionString = getDatabaseUrl2();
       if (!connectionString) {
         return res.status(500).json({
           status: "unhealthy",
@@ -1115,7 +1134,7 @@ async function createApp() {
   });
   app.get("/api/debug/env", (_req, res) => {
     res.json({
-      hasDatabaseUrl: Boolean(getDatabaseUrl()),
+      hasDatabaseUrl: Boolean(getDatabaseUrl2()),
       nodeEnv: process.env.NODE_ENV,
       vercel: Boolean(process.env.VERCEL)
     });
@@ -1130,7 +1149,7 @@ async function createApp() {
   });
   app.get("/api/debug/db", async (_req, res) => {
     try {
-      const connectionString = getDatabaseUrl();
+      const connectionString = getDatabaseUrl2();
       if (!connectionString) {
         return res.json({
           error: "No DATABASE_URL set",
