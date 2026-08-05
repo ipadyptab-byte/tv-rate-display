@@ -414,7 +414,7 @@ var externalRatesSchema = z.object({
   "Silver": z.coerce.number().positive().nullable()
 });
 function roundRate(value) {
-  const rounded = Math.round(value);
+  const rounded = Math.round(value / 10) * 10;
   return Number.isFinite(rounded) ? rounded : value;
 }
 function calculateAllRates(gold24Sale, silverSale, settings) {
@@ -480,10 +480,12 @@ async function syncRatesFromExternal(storage2, opts) {
       return current;
     }
   }
+  console.log("Creating gold rate in database:", JSON.stringify(newRates));
   const created = await storage2.createGoldRate({
     ...newRates,
     is_active: true
   });
+  console.log("Created gold rate with ID:", created.id);
   await writeCurrentRatesToFile(created);
   return created;
 }

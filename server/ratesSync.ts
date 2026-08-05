@@ -12,7 +12,8 @@ const externalRatesSchema = z.object({
 });
 
 function roundRate(value: number): number {
-  const rounded = Math.round(value);
+  // Round to nearest 10
+  const rounded = Math.round(value / 10) * 10;
   return Number.isFinite(rounded) ? rounded : value;
 }
 
@@ -111,11 +112,15 @@ export async function syncRatesFromExternal(
   }
 
   // Rates are different, create new record and update file
+  console.log("Creating gold rate in database:", JSON.stringify(newRates));
+  
   const created = await storage.createGoldRate({
     ...newRates,
     is_active: true,
   });
 
+  console.log("Created gold rate with ID:", created.id);
+  
   await writeCurrentRatesToFile(created);
 
   return created;
