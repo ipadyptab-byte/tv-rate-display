@@ -7,7 +7,7 @@
   "crons": [
     {
       "path": "/api/rates/sync-scheduled",
-      "schedule": "*/5 * * * *"
+      "schedule": "* * * * *"
     }
   ],
   "rewrites": [
@@ -15,6 +15,7 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "env": {
-    "DATABASE_URL": "@database-url"
+    "DATABASE_URL": "@database-url",
+    "EXTERNAL_RATES_URL": "@external-rates-url"
   }
 }

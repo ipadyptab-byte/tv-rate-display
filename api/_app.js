@@ -408,8 +408,10 @@ async function writeCurrentRatesToFile(rates) {
 
 // server/ratesSync.ts
 var externalRatesSchema = z.object({
-  gold_24k_sale: z.coerce.number().positive(),
-  silver_per_kg_sale: z.coerce.number().positive()
+  "24K Gold": z.coerce.number().positive().nullable(),
+  "22K Gold": z.coerce.number().positive().nullable(),
+  "18K Gold": z.coerce.number().positive().nullable(),
+  "Silver": z.coerce.number().positive().nullable()
 });
 function roundRate(value) {
   const rounded = Math.round(value);
@@ -454,8 +456,13 @@ async function syncRatesFromExternal(storage2, opts) {
     throw new Error(`External rates fetch failed (${response.status})`);
   }
   const payload = externalRatesSchema.parse(await response.json());
-  const gold24Sale = roundRate(payload.gold_24k_sale);
-  const silverSale = roundRate(payload.silver_per_kg_sale);
+  const gold24Sale = payload["24K Gold"] ? roundRate(payload["24K Gold"]) : null;
+  const gold22Sale = payload["22K Gold"] ? roundRate(payload["22K Gold"]) : null;
+  const gold18Sale = payload["18K Gold"] ? roundRate(payload["18K Gold"]) : null;
+  const silverSale = payload["Silver"] ? roundRate(payload["Silver"]) : null;
+  if (!gold24Sale || !silverSale) {
+    throw new Error("Invalid response: missing 24K Gold or Silver values");
+  }
   const newRates = calculateAllRates(gold24Sale, silverSale, settings);
   if (current && !opts.force) {
     const currentRates = {

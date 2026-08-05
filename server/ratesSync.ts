@@ -2,9 +2,13 @@ import { z } from "zod";
 import type { IStorage } from "./storage";
 import { writeCurrentRatesToFile } from "./currentratesfile";
 
+// Schema for businessmantra.info API response
+// Returns: { "24K Gold": 145000, "22K Gold": 133400, "18K Gold": 116000, "Silver": 2280 }
 const externalRatesSchema = z.object({
-  gold_24k_sale: z.coerce.number().positive(),
-  silver_per_kg_sale: z.coerce.number().positive(),
+  "24K Gold": z.coerce.number().positive().nullable(),
+  "22K Gold": z.coerce.number().positive().nullable(),
+  "18K Gold": z.coerce.number().positive().nullable(),
+  "Silver": z.coerce.number().positive().nullable(),
 });
 
 function roundRate(value: number): number {
@@ -73,8 +77,16 @@ export async function syncRatesFromExternal(
 
   const payload = externalRatesSchema.parse(await response.json());
 
-  const gold24Sale = roundRate(payload.gold_24k_sale);
-  const silverSale = roundRate(payload.silver_per_kg_sale);
+  // Get values from the businessmantra API format
+  const gold24Sale = payload["24K Gold"] ? roundRate(payload["24K Gold"]) : null;
+  const gold22Sale = payload["22K Gold"] ? roundRate(payload["22K Gold"]) : null;
+  const gold18Sale = payload["18K Gold"] ? roundRate(payload["18K Gold"]) : null;
+  const silverSale = payload["Silver"] ? roundRate(payload["Silver"]) : null;
+
+  // Validate we got the required data
+  if (!gold24Sale || !silverSale) {
+    throw new Error("Invalid response: missing 24K Gold or Silver values");
+  }
 
   // Calculate all rates from external data
   const newRates = calculateAllRates(gold24Sale, silverSale, settings);
