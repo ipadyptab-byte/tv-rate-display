@@ -223,6 +223,36 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Debug endpoint to check external API and environment
+  app.get("/api/rates/debug", async (req, res) => {
+    try {
+      const url = process.env.EXTERNAL_RATES_URL;
+      if (!url) {
+        return res.json({ error: "EXTERNAL_RATES_URL not set" });
+      }
+      
+      const response = await fetch(url, { headers: { "accept": "application/json" } });
+      const data = await response.json();
+      
+      const settings = await storage.getRateSettings();
+      const currentRates = await storage.getCurrentRates();
+      
+      res.json({
+        externalApiUrl: url,
+        externalApiStatus: response.ok,
+        externalApiData: data,
+        rateSettings: settings,
+        currentRatesInDb: currentRates ? {
+          id: currentRates.id,
+          gold_24k_sale: currentRates.gold_24k_sale,
+          created_date: currentRates.created_date
+        } : null
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Fetch and store rates from external API
   // GET /api/rates/sync - fetches latest 24k sale and silver sale, computes others via settings, stores to Postgres
   app.get("/api/rates/sync", async (req, res) => {
