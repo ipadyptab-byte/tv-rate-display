@@ -54,11 +54,16 @@ export default function TVDisplay() {
   useEffect(() => {
     const checkScreenSize = () => {
       const width = window.innerWidth;
-      if (width < 768) {
+      const height = window.innerHeight;
+      const aspectRatio = width / height;
+      
+      // Consider it a TV if: width >= 1280 and either aspect ratio > 1.5 OR height < 900
+      // This helps identify 42"+ TVs which typically have 16:9 or wider aspect ratios
+      if (width < 640) {
         setScreenSize('mobile');
-      } else if (width >= 768 && width < 1024) {
+      } else if (width < 1024 || (width < 1280 && aspectRatio < 1.5)) {
         setScreenSize('tablet');
-      } else if (width >= 1024 && width < 1920) {
+      } else if (width < 1600 || (width < 1920 && height > 900)) {
         setScreenSize('desktop');
       } else {
         setScreenSize('tv');
@@ -158,13 +163,22 @@ export default function TVDisplay() {
   const isVertical = settings?.orientation === "vertical";
   const currentPromo = promoImages[currentPromoIndex];
   
-  // Enhanced responsive font sizing
+  // Enhanced responsive font sizing - optimized for all screens
   const getRateFontSize = () => {
-    if (screenSize === 'mobile') return "text-xl";
-    if (screenSize === 'tablet') return "text-3xl";
-    if (screenSize === 'tv') return "text-6xl";
-    return settings?.rate_number_font_size || "text-4xl";
+    if (screenSize === 'mobile') return "text-lg";
+    if (screenSize === 'tablet') return "text-2xl";
+    if (screenSize === 'tv') return "text-5xl";
+    return settings?.rate_number_font_size || "text-3xl";
   };
+  
+  // Get spacing based on screen size
+  const getSpacing = () => {
+    if (screenSize === 'mobile') return { container: "p-1", card: "p-2", gap: "gap-2" };
+    if (screenSize === 'tablet') return { container: "p-3", card: "p-4", gap: "gap-4" };
+    if (screenSize === 'tv') return { container: "p-4", card: "p-6", gap: "gap-6" };
+    return { container: "p-3", card: "p-4", gap: "gap-4" };
+  };
+  const spacing = getSpacing();
   const rateFontSize = getRateFontSize();
 
   const getAnimationVariants = (effect: string) => {
@@ -204,7 +218,7 @@ export default function TVDisplay() {
 
   return (
     <div 
-      className={`w-full h-screen overflow-y-auto flex flex-col ${screenSize === 'mobile' ? 'p-2' : ''}`}
+      className={`w-full h-screen overflow-hidden flex flex-col`}
       style={{ 
         backgroundColor: settings?.background_color || "#FFF8E1",
         color: settings?.text_color || "#212529"
@@ -221,90 +235,90 @@ export default function TVDisplay() {
             className="flex-1 flex flex-col"
           >
             {/* Common Header - matches Mobile Control page, with date/time on top-right */}
-            <div className="relative bg-gradient-to-r from-gold-600 to-gold-700 text-black p-4 flex justify-center flex-shrink-0">
+            <div className={`relative bg-gradient-to-r from-gold-600 to-gold-700 text-black ${spacing.container} flex justify-center flex-shrink-0`}>
               <img 
                 src="/logo.png" 
                 alt="Devi Jewellers Logo"
-                className="h-40 w-[350px] object-contain"
+                className={screenSize === 'tv' ? 'h-24 w-[280px]' : screenSize === 'tablet' ? 'h-16 w-[200px]' : 'h-12 w-[150px]'}
               />
               {/* Date & Time - top-right */}
-              <div className="absolute top-2 right-2 md:top-4 md:right-4 text-right">
-                <p className={`font-semibold ${screenSize === 'tv' ? 'text-3xl' : screenSize === 'tablet' ? 'text-lg' : 'text-xs md:text-sm'} text-gray-800`}>
+              <div className={`absolute ${screenSize === 'tv' ? 'top-2 right-4' : screenSize === 'tablet' ? 'top-2 right-3' : 'top-1 right-2'} text-right`}>
+                <p className={`font-semibold ${screenSize === 'tv' ? 'text-2xl' : screenSize === 'tablet' ? 'text-base' : 'text-xs'} text-gray-800`}>
                   {format(currentTime, "EEEE, MMMM d, yyyy")}
                 </p>
-                <p className={`font-bold ${screenSize === 'tv' ? 'text-4xl' : screenSize === 'tablet' ? 'text-xl' : 'text-sm md:text-lg'} text-blue-700`}>
+                <p className={`font-bold ${screenSize === 'tv' ? 'text-3xl' : screenSize === 'tablet' ? 'text-lg' : 'text-sm'} text-blue-700`}>
                   {format(currentTime, "hh:mm:ss a")}
                 </p>
               </div>
             </div>
 
             {/* Today's Rate Header */}
-            <div className={`bg-gradient-to-r from-gold-600 to-gold-700 text-black text-center flex-shrink-0 ${screenSize === 'tv' ? 'py-4' : 'py-2 md:py-3'}`}>
-              <h2 className={`font-display font-bold ${screenSize === 'tv' ? 'text-5xl' : screenSize === 'tablet' ? 'text-2xl' : 'text-xl md:text-3xl'}`}>TODAY'S RATES</h2>
+            <div className={`bg-gradient-to-r from-gold-600 to-gold-700 text-black text-center flex-shrink-0 ${screenSize === 'tv' ? 'py-2' : screenSize === 'tablet' ? 'py-2' : 'py-1'}`}>
+              <h2 className={`font-display font-bold ${screenSize === 'tv' ? 'text-4xl' : screenSize === 'tablet' ? 'text-xl' : 'text-lg'}`}>TODAY'S RATES</h2>
             </div>
 
             {/* Rates Display - Main Content */}
-            <div className={`flex-1 container mx-auto ${screenSize === 'tv' ? 'px-12 py-12' : screenSize === 'tablet' ? 'px-4 py-6' : 'px-2 md:px-6 py-4 md:py-8'}`}>
-              <div className={`grid ${screenSize === 'tv' ? 'gap-12' : screenSize === 'tablet' ? 'gap-6' : 'gap-4 md:gap-8'} ${screenSize === 'mobile' || isVertical ? 'grid-cols-1' : 'grid-cols-2'}`}>
+            <div className={`flex-1 container mx-auto ${screenSize === 'tv' ? 'px-4 py-2' : screenSize === 'tablet' ? 'px-3 py-3' : 'px-2 py-2'}`}>
+              <div className={`grid ${spacing.gap} ${screenSize === 'mobile' || isVertical ? 'grid-cols-1' : 'grid-cols-2'} h-full`}>
                 {/* Gold Rates */}
-                <div className="space-y-4 md:space-y-6">
-                  <h3 className="text-lg md:text-2xl font-display font-bold text-center text-jewelry-primary mb-4 md:mb-6">GOLD RATES (Per 10 GMS)</h3>
+                <div className={`space-y-${screenSize === 'tv' ? '3' : screenSize === 'tablet' ? '2' : '2'}`}>
+                  <h3 className={`font-display font-bold text-center text-jewelry-primary ${screenSize === 'tv' ? 'text-xl' : screenSize === 'tablet' ? 'text-lg' : 'text-sm'}`}>GOLD RATES (Per 10 GMS)</h3>
                   
                   {/* 24K Gold */}
-                  <div className="rate-card bg-white rounded-lg md:rounded-xl shadow-md md:shadow-xl p-3 md:p-6 border-l-4 md:border-l-8 border-jewelry-primary fade-in">
-                    <div className="flex justify-between items-center mb-2 md:mb-4">
-                      <h4 className="text-lg md:text-2xl font-bold" style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>24K GOLD</h4>
-                      <div className="w-8 h-8 md:w-10 md:h-10 bg-jewelry-primary rounded-full gold-shimmer flex items-center justify-center">
-                        <i className="fas fa-star text-white text-sm md:text-base"></i>
+                  <div className={`rate-card bg-white rounded-lg shadow-md ${spacing.card} border-l-4 border-jewelry-primary fade-in`}>
+                    <div className={`flex justify-between items-center ${screenSize === 'tv' ? 'mb-2' : 'mb-1'}`}>
+                      <h4 className={`font-bold ${screenSize === 'tv' ? 'text-2xl' : screenSize === 'tablet' ? 'text-xl' : 'text-base'}`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>24K GOLD</h4>
+                      <div className={`bg-jewelry-primary rounded-full gold-shimmer flex items-center justify-center ${screenSize === 'tv' ? 'w-8 h-8' : screenSize === 'tablet' ? 'w-6 h-6' : 'w-5 h-5'}`}>
+                        <i className="fas fa-star text-white"></i>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 md:gap-4">
-                      <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
-                        <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SALE RATE</p>
+                    <div className={`grid grid-cols-2 gap-${screenSize === 'tv' ? '3' : '2'}`}>
+                      <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                        <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SALE RATE</p>
                         <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.gold_24k_sale}</p>
                       </div>
-                      <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
-                        <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>PURCHASE RATE</p>
+                      <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                        <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>PURCHASE RATE</p>
                         <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.gold_24k_purchase}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* 22K Gold */}
-                  <div className="rate-card bg-white rounded-lg md:rounded-xl shadow-md md:shadow-xl p-3 md:p-6 border-l-4 md:border-l-8 border-jewelry-primary fade-in">
-                    <div className="flex justify-between items-center mb-2 md:mb-4">
-                      <h4 className="text-lg md:text-2xl font-bold" style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>22K GOLD</h4>
-                      <div className="w-8 h-8 md:w-10 md:h-10 bg-jewelry-primary rounded-full gold-shimmer flex items-center justify-center">
-                        <i className="fas fa-crown text-white text-sm md:text-base"></i>
+                  <div className={`rate-card bg-white rounded-lg shadow-md ${spacing.card} border-l-4 border-jewelry-primary fade-in`}>
+                    <div className={`flex justify-between items-center ${screenSize === 'tv' ? 'mb-2' : 'mb-1'}`}>
+                      <h4 className={`font-bold ${screenSize === 'tv' ? 'text-2xl' : screenSize === 'tablet' ? 'text-xl' : 'text-base'}`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>22K GOLD</h4>
+                      <div className={`bg-jewelry-primary rounded-full gold-shimmer flex items-center justify-center ${screenSize === 'tv' ? 'w-8 h-8' : screenSize === 'tablet' ? 'w-6 h-6' : 'w-5 h-5'}`}>
+                        <i className="fas fa-crown text-white"></i>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 md:gap-4">
-                      <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
-                        <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SALE RATE</p>
+                    <div className={`grid grid-cols-2 gap-${screenSize === 'tv' ? '3' : '2'}`}>
+                      <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                        <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SALE RATE</p>
                         <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.gold_22k_sale}</p>
                       </div>
-                      <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
-                        <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>PURCHASE RATE</p>
+                      <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                        <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>PURCHASE RATE</p>
                         <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.gold_22k_purchase}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* 18K Gold */}
-                  <div className="rate-card bg-white rounded-lg md:rounded-xl shadow-md md:shadow-xl p-3 md:p-6 border-l-4 md:border-l-8 border-jewelry-primary fade-in">
-                    <div className="flex justify-between items-center mb-2 md:mb-4">
-                      <h4 className="text-lg md:text-2xl font-bold" style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>18K GOLD</h4>
-                      <div className="w-8 h-8 md:w-10 md:h-10 bg-jewelry-primary rounded-full gold-shimmer flex items-center justify-center">
-                        <i className="fas fa-crown text-white text-sm md:text-base"></i>
+                  <div className={`rate-card bg-white rounded-lg shadow-md ${spacing.card} border-l-4 border-jewelry-primary fade-in`}>
+                    <div className={`flex justify-between items-center ${screenSize === 'tv' ? 'mb-2' : 'mb-1'}`}>
+                      <h4 className={`font-bold ${screenSize === 'tv' ? 'text-2xl' : screenSize === 'tablet' ? 'text-xl' : 'text-base'}`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>18K GOLD</h4>
+                      <div className={`bg-jewelry-primary rounded-full gold-shimmer flex items-center justify-center ${screenSize === 'tv' ? 'w-8 h-8' : screenSize === 'tablet' ? 'w-6 h-6' : 'w-5 h-5'}`}>
+                        <i className="fas fa-gem text-white"></i>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 md:gap-4">
-                      <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
-                        <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SALE RATE</p>
+                    <div className={`grid grid-cols-2 gap-${screenSize === 'tv' ? '3' : '2'}`}>
+                      <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                        <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SALE RATE</p>
                         <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.gold_18k_sale}</p>
                       </div>
-                      <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
-                        <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>PURCHASE RATE</p>
+                      <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                        <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>PURCHASE RATE</p>
                         <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.gold_18k_purchase}</p>
                       </div>
                     </div>
@@ -312,25 +326,25 @@ export default function TVDisplay() {
                 </div>
 
                 {/* Silver Rates & Promo Column */}
-                <div className="space-y-4 md:space-y-6">
+                <div className={`space-y-${screenSize === 'tv' ? '3' : '2'}`}>
                   {/* Silver Rates */}
                   <div>
-                    <h3 className="text-lg md:text-2xl font-display font-bold text-center mb-4 md:mb-6" style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SILVER RATES (Per KG)</h3>
+                    <h3 className={`font-display font-bold text-center ${screenSize === 'tv' ? 'text-xl' : screenSize === 'tablet' ? 'text-lg' : 'text-sm'}`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SILVER RATES (Per KG)</h3>
                     
-                    <div className="rate-card bg-white rounded-lg md:rounded-xl shadow-md md:shadow-xl p-3 md:p-6 border-l-4 md:border-l-8 border-jewelry-primary fade-in">
-                      <div className="flex justify-between items-center mb-2 md:mb-4">
-                        <h4 className="text-lg md:text-2xl font-bold" style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SILVER</h4>
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-jewelry-primary rounded-full shadow-lg flex items-center justify-center">
-                          <i className="fas fa-circle text-white text-sm md:text-base"></i>
+                    <div className={`rate-card bg-white rounded-lg shadow-md ${spacing.card} border-l-4 border-jewelry-primary fade-in`}>
+                      <div className={`flex justify-between items-center ${screenSize === 'tv' ? 'mb-2' : 'mb-1'}`}>
+                        <h4 className={`font-bold ${screenSize === 'tv' ? 'text-2xl' : screenSize === 'tablet' ? 'text-xl' : 'text-base'}`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SILVER</h4>
+                        <div className={`bg-jewelry-primary rounded-full shadow-lg flex items-center justify-center ${screenSize === 'tv' ? 'w-8 h-8' : screenSize === 'tablet' ? 'w-6 h-6' : 'w-5 h-5'}`}>
+                          <i className="fas fa-circle text-white"></i>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 md:gap-4">
-                        <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
-                          <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SALE RATE</p>
+                      <div className={`grid grid-cols-2 gap-${screenSize === 'tv' ? '3' : '2'}`}>
+                        <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                          <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SALE RATE</p>
                           <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.silver_per_kg_sale}</p>
                         </div>
-                        <div className="text-center p-2 md:p-4 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
-                          <p className="text-xs md:text-sm font-semibold mb-1" style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>PURCHASE RATE</p>
+                        <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
+                          <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>PURCHASE RATE</p>
                           <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.silver_per_kg_purchase}</p>
                         </div>
                       </div>
@@ -339,15 +353,15 @@ export default function TVDisplay() {
 
                   {/* Promotional Slideshow */}
                   {promoImages.length > 0 && (
-                    <div className="bg-gradient-to-br from-gold-100 to-gold-200 rounded-lg md:rounded-xl shadow-md md:shadow-xl overflow-hidden fade-in flex-1">
-                      <div className="relative aspect-video bg-gradient-to-br from-gold-100 to-gold-200 h-full">
+                    <div className={`bg-gradient-to-br from-gold-100 to-gold-200 rounded-lg shadow-md overflow-hidden fade-in flex-1 ${screenSize === 'tv' ? 'min-h-[200px]' : ''}`}>
+                      <div className="relative bg-gradient-to-br from-gold-100 to-gold-200 h-full">
                         <AnimatePresence mode="wait">
                           {currentPromo && (
                             <motion.img
                               key={currentPromo.id}
                               src={currentPromo.image_url || ""}
                               alt={currentPromo.name || "Promotional Image"}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain"
                               initial="initial"
                               animate="animate"
                               exit="exit"
@@ -359,11 +373,11 @@ export default function TVDisplay() {
                         
                         {/* Slideshow Indicators */}
                         {promoImages.length > 1 && (
-                          <div className="absolute bottom-2 md:bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-1 md:space-x-2">
+                          <div className={`absolute left-1/2 transform -translate-x-1/2 flex ${screenSize === 'tv' ? 'bottom-2 space-x-2' : 'bottom-1 space-x-1'}`}>
                             {promoImages.map((_, index) => (
                               <div
                                 key={index}
-                                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-colors ${
+                                className={`rounded-full transition-colors ${screenSize === 'tv' ? 'w-2 h-2' : 'w-1.5 h-1.5'} ${
                                   index === currentPromoIndex ? 'bg-gold-600' : 'bg-gold-300'
                                 }`}
                               />
