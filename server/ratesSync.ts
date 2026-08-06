@@ -12,10 +12,8 @@ const externalRatesSchema = z.object({
 });
 
 function roundRate(value: number): number {
-  // Round to nearest 10 - always round up from 5
-  const divided = value / 10;
-  const rounded = Math.round(divided);
-  const result = rounded * 10;
+  // Always round to nearest 10, rounding UP for .5
+  const result = Math.ceil(value / 10) * 10;
   if (!Number.isFinite(result)) return value;
   console.log(`Rounding: ${value} -> ${result}`);
   return result;

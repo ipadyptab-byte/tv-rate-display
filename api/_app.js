@@ -414,9 +414,7 @@ var externalRatesSchema = z.object({
   "Silver": z.coerce.number().positive().nullable()
 });
 function roundRate(value) {
-  const divided = value / 10;
-  const rounded = Math.round(divided);
-  const result = rounded * 10;
+  const result = Math.ceil(value / 10) * 10;
   if (!Number.isFinite(result)) return value;
   console.log(`Rounding: ${value} -> ${result}`);
   return result;
