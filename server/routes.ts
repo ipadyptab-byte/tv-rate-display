@@ -183,9 +183,12 @@ export async function registerRoutes(app: Express): Promise<void> {
         perc_24k_purchase: 1.0,
         perc_22k_sale: 0.92,
         perc_22k_purchase: 0.90,
+        perc_22k_exchange: 0.91,
         perc_18k_sale: 0.86,
         perc_18k_purchase: 0.80,
+        perc_18k_exchange: 0.85,
         silver_purchase_offset: -5000,
+        silver_exchange_offset: -3000,
         check_interval_minutes: 1
       });
     } catch (error) {

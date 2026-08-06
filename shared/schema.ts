@@ -10,10 +10,13 @@ export const goldRates = pgTable("gold_rates", {
   gold_24k_purchase: real("gold_24k_purchase").notNull(),
   gold_22k_sale: real("gold_22k_sale").notNull(),
   gold_22k_purchase: real("gold_22k_purchase").notNull(),
+  gold_22k_exchange: real("gold_22k_exchange").default(0),
   gold_18k_sale: real("gold_18k_sale").notNull(),
   gold_18k_purchase: real("gold_18k_purchase").notNull(),
+  gold_18k_exchange: real("gold_18k_exchange").default(0),
   silver_per_kg_sale: real("silver_per_kg_sale").notNull(),
   silver_per_kg_purchase: real("silver_per_kg_purchase").notNull(),
+  silver_per_kg_exchange: real("silver_per_kg_exchange").default(0),
   is_active: boolean("is_active").default(true),
   source: text("source").default('api'),
   created_date: timestamp("created_date").defaultNow()
@@ -76,9 +79,12 @@ export const rateSettings = pgTable("rate_settings", {
   perc_24k_purchase: real("perc_24k_purchase").default(0.985),
   perc_22k_sale: real("perc_22k_sale").default(0.92),
   perc_22k_purchase: real("perc_22k_purchase").default(0.90),
+  perc_22k_exchange: real("perc_22k_exchange").default(0.91),
   perc_18k_sale: real("perc_18k_sale").default(0.86),
   perc_18k_purchase: real("perc_18k_purchase").default(0.80),
+  perc_18k_exchange: real("perc_18k_exchange").default(0.85),
   silver_purchase_offset: real("silver_purchase_offset").default(-5000), // purchase = sale + offset
+  silver_exchange_offset: real("silver_exchange_offset").default(-3000), // exchange = sale + offset
   check_interval_minutes: integer("check_interval_minutes").default(5), // auto sync interval
   created_date: timestamp("created_date").defaultNow()
 });

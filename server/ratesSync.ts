@@ -23,9 +23,12 @@ function calculateAllRates(gold24Sale: number, silverSale: number, settings: any
   const perc24Purchase = settings?.perc_24k_purchase ?? 0.985;
   const perc22Sale = settings?.perc_22k_sale ?? 0.92;
   const perc22Purchase = settings?.perc_22k_purchase ?? 0.9;
+  const perc22Exchange = settings?.perc_22k_exchange ?? 0.91;
   const perc18Sale = settings?.perc_18k_sale ?? 0.86;
   const perc18Purchase = settings?.perc_18k_purchase ?? 0.75;
+  const perc18Exchange = settings?.perc_18k_exchange ?? 0.85;
   const silverPurchaseOffset = settings?.silver_purchase_offset ?? -5000;
+  const silverExchangeOffset = settings?.silver_exchange_offset ?? -3000;
 
   // Calculate and round all values
   const result = {
@@ -33,10 +36,13 @@ function calculateAllRates(gold24Sale: number, silverSale: number, settings: any
     gold_24k_purchase: roundRate(gold24Sale * perc24Purchase),
     gold_22k_sale: roundRate(gold24Sale * perc22Sale),
     gold_22k_purchase: roundRate(gold24Sale * perc22Purchase),
+    gold_22k_exchange: roundRate(gold24Sale * perc22Exchange),
     gold_18k_sale: roundRate(gold24Sale * perc18Sale),
     gold_18k_purchase: roundRate(gold24Sale * perc18Purchase),
+    gold_18k_exchange: roundRate(gold24Sale * perc18Exchange),
     silver_per_kg_sale: silverSale,
     silver_per_kg_purchase: roundRate(silverSale + silverPurchaseOffset),
+    silver_per_kg_exchange: roundRate(silverSale + silverExchangeOffset),
   };
   
   console.log("Calculated rates:", JSON.stringify(result));
@@ -46,8 +52,8 @@ function calculateAllRates(gold24Sale: number, silverSale: number, settings: any
 function ratesAreEqual(ratesA: any, ratesB: any): boolean {
   // Compare all rate values as strings to avoid type issues
   const fields = [
-    'gold_24k_sale', 'gold_24k_purchase', 'gold_22k_sale', 'gold_22k_purchase',
-    'gold_18k_sale', 'gold_18k_purchase', 'silver_per_kg_sale', 'silver_per_kg_purchase'
+    'gold_24k_sale', 'gold_24k_purchase', 'gold_22k_sale', 'gold_22k_purchase', 'gold_22k_exchange',
+    'gold_18k_sale', 'gold_18k_purchase', 'gold_18k_exchange', 'silver_per_kg_sale', 'silver_per_kg_purchase', 'silver_per_kg_exchange'
   ];
   
   for (const field of fields) {
