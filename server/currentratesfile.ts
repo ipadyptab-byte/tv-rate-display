@@ -16,10 +16,13 @@ export async function writeCurrentRatesToFile(rates: GoldRate) {
     `gold_24k_purchase=${rates.gold_24k_purchase}`,
     `gold_22k_sale=${rates.gold_22k_sale}`,
     `gold_22k_purchase=${rates.gold_22k_purchase}`,
+    `gold_22k_exchange=${rates.gold_22k_exchange}`,
     `gold_18k_sale=${rates.gold_18k_sale}`,
     `gold_18k_purchase=${rates.gold_18k_purchase}`,
+    `gold_18k_exchange=${rates.gold_18k_exchange}`,
     `silver_per_kg_sale=${rates.silver_per_kg_sale}`,
     `silver_per_kg_purchase=${rates.silver_per_kg_purchase}`,
+    `silver_per_kg_exchange=${rates.silver_per_kg_exchange}`,
     `is_active=${rates.is_active}`,
     `created_date=${
       rates.created_date instanceof Date

@@ -76,12 +76,12 @@ export class PostgresStorage implements IStorage {
       .orderBy(desc(goldRates.created_date))
       .limit(1);
 
-    // Compare all rate values with the most recent entry
+          // Compare all rate values with the most recent entry
     if (currentRates.length > 0) {
       const lastRate = currentRates[0];
       const rateFields = [
-        'gold_24k_sale', 'gold_24k_purchase', 'gold_22k_sale', 'gold_22k_purchase',
-        'gold_18k_sale', 'gold_18k_purchase', 'silver_per_kg_sale', 'silver_per_kg_purchase'
+        'gold_24k_sale', 'gold_24k_purchase', 'gold_22k_sale', 'gold_22k_purchase', 'gold_22k_exchange',
+        'gold_18k_sale', 'gold_18k_purchase', 'gold_18k_exchange', 'silver_per_kg_sale', 'silver_per_kg_purchase', 'silver_per_kg_exchange'
       ];
 
       let hasChanges = false;

@@ -23,9 +23,12 @@ const rateSettingsSchema = z.object({
   perc_24k_purchase: z.number().min(0).max(1),
   perc_22k_sale: z.number().min(0).max(1),
   perc_22k_purchase: z.number().min(0).max(1),
+  perc_22k_exchange: z.number().min(0).max(1),
   perc_18k_sale: z.number().min(0).max(1),
   perc_18k_purchase: z.number().min(0).max(1),
+  perc_18k_exchange: z.number().min(0).max(1),
   silver_purchase_offset: z.number(), // can be negative, e.g. -5000
+  silver_exchange_offset: z.number(), // can be negative, e.g. -3000
   check_interval_minutes: z.number().min(1).max(120).default(5),
 });
 
@@ -49,9 +52,12 @@ export default function RateSync() {
       perc_24k_purchase: 0.985,
       perc_22k_sale: 0.920,
       perc_22k_purchase: 0.900,
+      perc_22k_exchange: 0.910,
       perc_18k_sale: 0.860,
       perc_18k_purchase: 0.800,
+      perc_18k_exchange: 0.850,
       silver_purchase_offset: -5000,
+      silver_exchange_offset: -3000,
       check_interval_minutes: 1,
     },
   });
@@ -62,9 +68,12 @@ export default function RateSync() {
         perc_24k_purchase: rateSettings.perc_24k_purchase ?? 0.985,
         perc_22k_sale: rateSettings.perc_22k_sale ?? 0.920,
         perc_22k_purchase: rateSettings.perc_22k_purchase ?? 0.900,
+        perc_22k_exchange: rateSettings.perc_22k_exchange ?? 0.910,
         perc_18k_sale: rateSettings.perc_18k_sale ?? 0.860,
         perc_18k_purchase: rateSettings.perc_18k_purchase ?? 0.800,
+        perc_18k_exchange: rateSettings.perc_18k_exchange ?? 0.850,
         silver_purchase_offset: rateSettings.silver_purchase_offset ?? -5000,
+        silver_exchange_offset: rateSettings.silver_exchange_offset ?? -3000,
         check_interval_minutes: rateSettings.check_interval_minutes ?? 1,
       });
     }
@@ -200,6 +209,26 @@ export default function RateSync() {
                   />
                   <FormField
                     control={form.control}
+                    name="perc_22k_exchange"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>22K Exchange (% of 24K Sale)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.001"
+                            min="0"
+                            max="1"
+                            value={field.value ?? 0.910}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="perc_18k_sale"
                     render={({ field }) => (
                       <FormItem>
@@ -233,6 +262,19 @@ export default function RateSync() {
                   />
                   <FormField
                     control={form.control}
+                    name="perc_18k_exchange"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>18K Exchange (% of 24K Sale)</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.001" min="0" max="1" value={field.value ?? 0.850} onChange={(e) => field.onChange(Number(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="silver_purchase_offset"
                     render={({ field }) => (
                       <FormItem>
@@ -241,6 +283,20 @@ export default function RateSync() {
                           <Input type="number" step="1" value={field.value ?? -5000} onChange={(e) => field.onChange(Number(e.target.value))} />
                         </FormControl>
                         <p className="text-xs text-gray-600">Example: -5000 means Silver purchase = Silver sale - 5000</p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="silver_exchange_offset"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Silver Exchange Offset (added to Silver Sale)</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="1" value={field.value ?? -3000} onChange={(e) => field.onChange(Number(e.target.value))} />
+                        </FormControl>
+                        <p className="text-xs text-gray-600">Example: -3000 means Silver exchange = Silver sale - 3000</p>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -284,10 +340,13 @@ export default function RateSync() {
               <div>24K Sale: <span className="font-semibold">{currentRates.gold_24k_sale}</span></div>
               <div>24K Purchase: <span className="font-semibold">{currentRates.gold_24k_purchase}</span></div>
               <div>22K Sale: <span className="font-semibold">{currentRates.gold_22k_sale}</span></div>
+              <div>22K Exchange: <span className="font-semibold">{currentRates.gold_22k_exchange}</span></div>
               <div>22K Purchase: <span className="font-semibold">{currentRates.gold_22k_purchase}</span></div>
               <div>18K Sale: <span className="font-semibold">{currentRates.gold_18k_sale}</span></div>
+              <div>18K Exchange: <span className="font-semibold">{currentRates.gold_18k_exchange}</span></div>
               <div>18K Purchase: <span className="font-semibold">{currentRates.gold_18k_purchase}</span></div>
               <div>Silver Sale: <span className="font-semibold">{currentRates.silver_per_kg_sale}</span></div>
+              <div>Silver Exchange: <span className="font-semibold">{currentRates.silver_per_kg_exchange}</span></div>
               <div>Silver Purchase: <span className="font-semibold">{currentRates.silver_per_kg_purchase}</span></div>
             </CardContent>
           </Card>
