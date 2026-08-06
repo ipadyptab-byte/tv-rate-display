@@ -770,6 +770,28 @@ async function registerRoutes(app) {
     });
     res.json({ results });
   });
+  app.get("/api/debug-calculate", async (_req, res) => {
+    const gold24Sale = 149e3;
+    const silverSale = 2300;
+    const perc24Purchase = 0.985;
+    const perc22Sale = 0.92;
+    const perc22Purchase = 0.905;
+    const perc18Sale = 0.8;
+    const perc18Purchase = 0.75;
+    const silverPurchaseOffset = -5e3;
+    const roundRate2 = (v) => Math.ceil(v / 10) * 10;
+    const result = {
+      gold_24k_sale: gold24Sale,
+      gold_24k_purchase: roundRate2(gold24Sale * perc24Purchase),
+      gold_22k_sale: roundRate2(gold24Sale * perc22Sale),
+      gold_22k_purchase: roundRate2(gold24Sale * perc22Purchase),
+      gold_18k_sale: roundRate2(gold24Sale * perc18Sale),
+      gold_18k_purchase: roundRate2(gold24Sale * perc18Purchase),
+      silver_per_kg_sale: silverSale,
+      silver_per_kg_purchase: roundRate2(silverSale + silverPurchaseOffset)
+    };
+    res.json(result);
+  });
   app.get("/api/settings/display", async (req, res) => {
     try {
       const settings = await storage.getDisplaySettings();
