@@ -104,16 +104,17 @@ export async function syncRatesFromExternal(
   const newRates = calculateAllRates(gold24Sale, silverSale, settings);
 
   // Check if rates have changed from current database rates
+  // Apply rounding to current (stored) rates before comparison
   if (current && !opts.force) {
     const currentRates = {
-      gold_24k_sale: current.gold_24k_sale,
-      gold_24k_purchase: current.gold_24k_purchase,
-      gold_22k_sale: current.gold_22k_sale,
-      gold_22k_purchase: current.gold_22k_purchase,
-      gold_18k_sale: current.gold_18k_sale,
-      gold_18k_purchase: current.gold_18k_purchase,
-      silver_per_kg_sale: current.silver_per_kg_sale,
-      silver_per_kg_purchase: current.silver_per_kg_purchase,
+      gold_24k_sale: roundRate(current.gold_24k_sale),
+      gold_24k_purchase: roundRate(current.gold_24k_purchase),
+      gold_22k_sale: roundRate(current.gold_22k_sale),
+      gold_22k_purchase: roundRate(current.gold_22k_purchase),
+      gold_18k_sale: roundRate(current.gold_18k_sale),
+      gold_18k_purchase: roundRate(current.gold_18k_purchase),
+      silver_per_kg_sale: roundRate(current.silver_per_kg_sale),
+      silver_per_kg_purchase: roundRate(current.silver_per_kg_purchase),
     };
 
     if (ratesAreEqual(currentRates, newRates)) {
