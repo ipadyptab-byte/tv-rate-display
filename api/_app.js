@@ -439,27 +439,6 @@ function calculateAllRates(gold24Sale, silverSale, settings) {
   console.log("Calculated rates:", JSON.stringify(result));
   return result;
 }
-function ratesAreEqual(ratesA, ratesB) {
-  const fields = [
-    "gold_24k_sale",
-    "gold_24k_purchase",
-    "gold_22k_sale",
-    "gold_22k_purchase",
-    "gold_18k_sale",
-    "gold_18k_purchase",
-    "silver_per_kg_sale",
-    "silver_per_kg_purchase"
-  ];
-  for (const field of fields) {
-    const valA = Number(ratesA[field]);
-    const valB = Number(ratesB[field]);
-    if (valA !== valB) {
-      console.log(`Rate difference: ${field} - DB: ${valA}, New: ${valB}`);
-      return false;
-    }
-  }
-  return true;
-}
 async function syncRatesFromExternal(storage2, opts) {
   const settings = await storage2.getRateSettings();
   const intervalMinutes = settings?.check_interval_minutes ?? 1;
@@ -485,23 +464,19 @@ async function syncRatesFromExternal(storage2, opts) {
   if (!gold24Sale || !silverSale) {
     throw new Error("Invalid response: missing 24K Gold or Silver values");
   }
-  const newRates = calculateAllRates(gold24Sale, silverSale, settings);
+  const rawGold24 = payload["24K Gold"];
+  const rawSilver = payload["Silver"];
   if (current && !opts.force) {
-    const currentRates = {
-      gold_24k_sale: roundRate(current.gold_24k_sale),
-      gold_24k_purchase: roundRate(current.gold_24k_purchase),
-      gold_22k_sale: roundRate(current.gold_22k_sale),
-      gold_22k_purchase: roundRate(current.gold_22k_purchase),
-      gold_18k_sale: roundRate(current.gold_18k_sale),
-      gold_18k_purchase: roundRate(current.gold_18k_purchase),
-      silver_per_kg_sale: roundRate(current.silver_per_kg_sale),
-      silver_per_kg_purchase: roundRate(current.silver_per_kg_purchase)
-    };
-    if (ratesAreEqual(currentRates, newRates)) {
-      console.log("Rates unchanged, skipping database update");
+    const storedGold24 = current.gold_24k_sale;
+    const storedSilver = current.silver_per_kg_sale;
+    const normStoredSilver = storedSilver >= 1e4 ? storedSilver / 100 : storedSilver;
+    const normRawSilver = rawSilver >= 1e4 ? rawSilver / 100 : rawSilver;
+    if (storedGold24 === rawGold24 && normStoredSilver === normRawSilver) {
+      console.log("Rates unchanged (source API values same), skipping database update");
       return current;
     }
   }
+  const newRates = calculateAllRates(gold24Sale, silverSale, settings);
   console.log("Creating gold rate in database:", JSON.stringify(newRates));
   const created = await storage2.createGoldRate({
     ...newRates,

@@ -100,28 +100,29 @@ export async function syncRatesFromExternal(
     throw new Error("Invalid response: missing 24K Gold or Silver values");
   }
 
-  // Calculate all rates from external data
-  const newRates = calculateAllRates(gold24Sale, silverSale, settings);
+  // Get RAW values from API (before any rounding)
+  const rawGold24 = payload["24K Gold"];
+  const rawSilver = payload["Silver"];
 
-  // Check if rates have changed from current database rates
-  // Apply rounding to current (stored) rates before comparison
+  // Compare source API values - if they're the same as stored, skip
   if (current && !opts.force) {
-    const currentRates = {
-      gold_24k_sale: roundRate(current.gold_24k_sale),
-      gold_24k_purchase: roundRate(current.gold_24k_purchase),
-      gold_22k_sale: roundRate(current.gold_22k_sale),
-      gold_22k_purchase: roundRate(current.gold_22k_purchase),
-      gold_18k_sale: roundRate(current.gold_18k_sale),
-      gold_18k_purchase: roundRate(current.gold_18k_purchase),
-      silver_per_kg_sale: roundRate(current.silver_per_kg_sale),
-      silver_per_kg_purchase: roundRate(current.silver_per_kg_purchase),
-    };
-
-    if (ratesAreEqual(currentRates, newRates)) {
-      console.log("Rates unchanged, skipping database update");
+    // Use the stored gold_24k_sale and silver_per_kg_sale as reference
+    // These should match when API hasn't changed
+    const storedGold24 = current.gold_24k_sale;
+    const storedSilver = current.silver_per_kg_sale;
+    
+    // Compare after normalizing (divide by 100 if needed for silver)
+    const normStoredSilver = storedSilver >= 10000 ? storedSilver / 100 : storedSilver;
+    const normRawSilver = rawSilver >= 10000 ? rawSilver / 100 : rawSilver;
+    
+    if (storedGold24 === rawGold24 && normStoredSilver === normRawSilver) {
+      console.log("Rates unchanged (source API values same), skipping database update");
       return current;
     }
   }
+
+  // Calculate all rates from external data
+  const newRates = calculateAllRates(gold24Sale, silverSale, settings);
 
   // Rates are different, create new record and update file
   console.log("Creating gold rate in database:", JSON.stringify(newRates));
