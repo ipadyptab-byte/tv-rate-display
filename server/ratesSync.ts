@@ -69,12 +69,21 @@ export async function syncRatesFromExternal(
   const intervalMinutes = settings?.check_interval_minutes ?? 1;
 
   const current = await storage.getCurrentRates();
+  console.log("Current rates:", current ? `ID ${current.id}` : "none");
+  
   if (!opts.force && current?.created_date) {
     const last = current.created_date instanceof Date
       ? current.created_date
       : new Date(current.created_date);
     const dueAt = last.getTime() + intervalMinutes * 60 * 1000;
-    if (Date.now() < dueAt) return current;
+    const now = Date.now();
+    console.log(`Interval check: last=${last.toISOString()}, dueAt=${new Date(dueAt).toISOString()}, now=${new Date(now).toISOString()}, interval=${intervalMinutes}min`);
+    
+    if (now < dueAt) {
+      console.log("Within interval, skipping sync");
+      return current;
+    }
+    console.log("Interval passed, proceeding with sync...");
   }
 
   const url = process.env.EXTERNAL_RATES_URL;
@@ -117,7 +126,10 @@ export async function syncRatesFromExternal(
       silver_per_kg_purchase: current.silver_per_kg_purchase
     };
 
-    if (ratesAreEqual(storedRates, newRates)) {
+    const isEqual = ratesAreEqual(storedRates, newRates);
+    console.log("Comparing rates:", JSON.stringify({ stored: storedRates, new: newRates, isEqual }));
+    
+    if (isEqual) {
       console.log("Rates unchanged, skipping database update");
       return current;
     }
