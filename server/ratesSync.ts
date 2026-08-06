@@ -24,10 +24,11 @@ function calculateAllRates(gold24Sale: number, silverSale: number, settings: any
   const perc22Sale = settings?.perc_22k_sale ?? 0.92;
   const perc22Purchase = settings?.perc_22k_purchase ?? 0.9;
   const perc18Sale = settings?.perc_18k_sale ?? 0.86;
-  const perc18Purchase = settings?.perc_18k_purchase ?? 0.8;
+  const perc18Purchase = settings?.perc_18k_purchase ?? 0.75;
   const silverPurchaseOffset = settings?.silver_purchase_offset ?? -5000;
 
-  return {
+  // Calculate and round all values
+  const result = {
     gold_24k_sale: gold24Sale,
     gold_24k_purchase: roundRate(gold24Sale * perc24Purchase),
     gold_22k_sale: roundRate(gold24Sale * perc22Sale),
@@ -37,6 +38,9 @@ function calculateAllRates(gold24Sale: number, silverSale: number, settings: any
     silver_per_kg_sale: silverSale,
     silver_per_kg_purchase: roundRate(silverSale + silverPurchaseOffset),
   };
+  
+  console.log("Calculated rates:", JSON.stringify(result));
+  return result;
 }
 
 function ratesAreEqual(ratesA: any, ratesB: any): boolean {

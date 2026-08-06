@@ -424,9 +424,9 @@ function calculateAllRates(gold24Sale, silverSale, settings) {
   const perc22Sale = settings?.perc_22k_sale ?? 0.92;
   const perc22Purchase = settings?.perc_22k_purchase ?? 0.9;
   const perc18Sale = settings?.perc_18k_sale ?? 0.86;
-  const perc18Purchase = settings?.perc_18k_purchase ?? 0.8;
+  const perc18Purchase = settings?.perc_18k_purchase ?? 0.75;
   const silverPurchaseOffset = settings?.silver_purchase_offset ?? -5e3;
-  return {
+  const result = {
     gold_24k_sale: gold24Sale,
     gold_24k_purchase: roundRate(gold24Sale * perc24Purchase),
     gold_22k_sale: roundRate(gold24Sale * perc22Sale),
@@ -436,6 +436,8 @@ function calculateAllRates(gold24Sale, silverSale, settings) {
     silver_per_kg_sale: silverSale,
     silver_per_kg_purchase: roundRate(silverSale + silverPurchaseOffset)
   };
+  console.log("Calculated rates:", JSON.stringify(result));
+  return result;
 }
 function ratesAreEqual(ratesA, ratesB) {
   return ratesA.gold_24k_sale === ratesB.gold_24k_sale && ratesA.gold_24k_purchase === ratesB.gold_24k_purchase && ratesA.gold_22k_sale === ratesB.gold_22k_sale && ratesA.gold_22k_purchase === ratesB.gold_22k_purchase && ratesA.gold_18k_sale === ratesB.gold_18k_sale && ratesA.gold_18k_purchase === ratesB.gold_18k_purchase && ratesA.silver_per_kg_sale === ratesB.silver_per_kg_sale && ratesA.silver_per_kg_purchase === ratesB.silver_per_kg_purchase;
