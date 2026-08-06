@@ -760,6 +760,14 @@ async function registerRoutes(app) {
       });
     }
   });
+  app.get("/api/test-round", async (_req, res) => {
+    const testValues = [146765, 134845, 111750, 23e4];
+    const results = testValues.map((v) => {
+      const rounded = Math.ceil(v / 10) * 10;
+      return { input: v, output: rounded };
+    });
+    res.json({ results });
+  });
   app.get("/api/settings/display", async (req, res) => {
     try {
       const settings = await storage.getDisplaySettings();

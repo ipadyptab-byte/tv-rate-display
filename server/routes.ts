@@ -308,6 +308,16 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // Test rounding endpoint
+  app.get("/api/test-round", async (_req, res) => {
+    const testValues = [146765, 134845, 111750, 230000];
+    const results = testValues.map(v => {
+      const rounded = Math.ceil(v / 10) * 10;
+      return { input: v, output: rounded };
+    });
+    res.json({ results });
+  });
+
   // Display Settings Routes
   app.get("/api/settings/display", async (req, res) => {
     try {
