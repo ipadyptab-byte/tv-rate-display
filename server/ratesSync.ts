@@ -113,29 +113,7 @@ export async function syncRatesFromExternal(
   // Calculate all rates from external data
   const newRates = calculateAllRates(gold24Sale, silverSale, settings);
 
-  // Compare with current stored rates - only create new record if values actually changed
-  if (current && !opts.force) {
-    const storedRates = {
-      gold_24k_sale: current.gold_24k_sale,
-      gold_24k_purchase: current.gold_24k_purchase,
-      gold_22k_sale: current.gold_22k_sale,
-      gold_22k_purchase: current.gold_22k_purchase,
-      gold_18k_sale: current.gold_18k_sale,
-      gold_18k_purchase: current.gold_18k_purchase,
-      silver_per_kg_sale: current.silver_per_kg_sale,
-      silver_per_kg_purchase: current.silver_per_kg_purchase
-    };
-
-    const isEqual = ratesAreEqual(storedRates, newRates);
-    console.log("Comparing rates:", JSON.stringify({ stored: storedRates, new: newRates, isEqual }));
-    
-    if (isEqual) {
-      console.log("Rates unchanged, skipping database update");
-      return current;
-    }
-  }
-
-  // Rates are different, create new record and update file
+  // Let storage.createGoldRate handle duplicate prevention
   console.log("Creating gold rate in database:", JSON.stringify(newRates));
   
   const created = await storage.createGoldRate({
