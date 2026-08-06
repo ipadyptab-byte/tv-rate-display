@@ -44,16 +44,21 @@ function calculateAllRates(gold24Sale: number, silverSale: number, settings: any
 }
 
 function ratesAreEqual(ratesA: any, ratesB: any): boolean {
-  return (
-    ratesA.gold_24k_sale === ratesB.gold_24k_sale &&
-    ratesA.gold_24k_purchase === ratesB.gold_24k_purchase &&
-    ratesA.gold_22k_sale === ratesB.gold_22k_sale &&
-    ratesA.gold_22k_purchase === ratesB.gold_22k_purchase &&
-    ratesA.gold_18k_sale === ratesB.gold_18k_sale &&
-    ratesA.gold_18k_purchase === ratesB.gold_18k_purchase &&
-    ratesA.silver_per_kg_sale === ratesB.silver_per_kg_sale &&
-    ratesA.silver_per_kg_purchase === ratesB.silver_per_kg_purchase
-  );
+  // Compare all rate values as strings to avoid type issues
+  const fields = [
+    'gold_24k_sale', 'gold_24k_purchase', 'gold_22k_sale', 'gold_22k_purchase',
+    'gold_18k_sale', 'gold_18k_purchase', 'silver_per_kg_sale', 'silver_per_kg_purchase'
+  ];
+  
+  for (const field of fields) {
+    const valA = Number(ratesA[field]);
+    const valB = Number(ratesB[field]);
+    if (valA !== valB) {
+      console.log(`Rate difference: ${field} - DB: ${valA}, New: ${valB}`);
+      return false;
+    }
+  }
+  return true;
 }
 
 export async function syncRatesFromExternal(
