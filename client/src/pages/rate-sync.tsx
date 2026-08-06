@@ -159,7 +159,7 @@ export default function RateSync() {
                       <FormItem>
                         <FormLabel>24K Purchase (% of 24K Sale)</FormLabel>
                         <FormControl>
-                          <Input type="number" step="0.001" min="0" max="1" value={field.value ?? 0.985} onChange={(e) => field.onChange(Number(e.target.value))} />
+                          <Input type="number" step="0.010" min="0" max="1" value={field.value ?? 0.985} onChange={(e) => field.onChange(Number(e.target.value))} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
