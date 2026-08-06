@@ -17,6 +17,5 @@
   "env": {
     "DATABASE_URL": "@database-url",
     "EXTERNAL_RATES_URL": "https://www.businessmantra.info/gold_rates/devi_gold_rate/api.php"
-  },
-  "cache": false
+  }
 }
