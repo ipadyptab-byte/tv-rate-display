@@ -12,7 +12,7 @@ const externalRatesSchema = z.object({
 });
 
 function roundRate(value: number): number {
-  // Round to nearest 10
+  // Round to nearest 10 (ensure always rounds up if ending in 5)
   const rounded = Math.round(value / 10) * 10;
   return Number.isFinite(rounded) ? rounded : value;
 }
