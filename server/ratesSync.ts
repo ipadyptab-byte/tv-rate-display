@@ -100,29 +100,27 @@ export async function syncRatesFromExternal(
     throw new Error("Invalid response: missing 24K Gold or Silver values");
   }
 
-  // Get RAW values from API (before any rounding)
-  const rawGold24 = payload["24K Gold"];
-  const rawSilver = payload["Silver"];
+  // Calculate all rates from external data
+  const newRates = calculateAllRates(gold24Sale, silverSale, settings);
 
-  // Compare source API values - if they're the same as stored, skip
+  // Compare with current stored rates - only create new record if values actually changed
   if (current && !opts.force) {
-    // Use the stored gold_24k_sale and silver_per_kg_sale as reference
-    // These should match when API hasn't changed
-    const storedGold24 = current.gold_24k_sale;
-    const storedSilver = current.silver_per_kg_sale;
-    
-    // Compare after normalizing (divide by 100 if needed for silver)
-    const normStoredSilver = storedSilver >= 10000 ? storedSilver / 100 : storedSilver;
-    const normRawSilver = rawSilver >= 10000 ? rawSilver / 100 : rawSilver;
-    
-    if (storedGold24 === rawGold24 && normStoredSilver === normRawSilver) {
-      console.log("Rates unchanged (source API values same), skipping database update");
+    const storedRates = {
+      gold_24k_sale: current.gold_24k_sale,
+      gold_24k_purchase: current.gold_24k_purchase,
+      gold_22k_sale: current.gold_22k_sale,
+      gold_22k_purchase: current.gold_22k_purchase,
+      gold_18k_sale: current.gold_18k_sale,
+      gold_18k_purchase: current.gold_18k_purchase,
+      silver_per_kg_sale: current.silver_per_kg_sale,
+      silver_per_kg_purchase: current.silver_per_kg_purchase
+    };
+
+    if (ratesAreEqual(storedRates, newRates)) {
+      console.log("Rates unchanged, skipping database update");
       return current;
     }
   }
-
-  // Calculate all rates from external data
-  const newRates = calculateAllRates(gold24Sale, silverSale, settings);
 
   // Rates are different, create new record and update file
   console.log("Creating gold rate in database:", JSON.stringify(newRates));
