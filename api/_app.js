@@ -414,9 +414,12 @@ var externalRatesSchema = z.object({
   "Silver": z.coerce.number().positive().nullable()
 });
 function roundRate(value) {
-  const rounded = Math.round(value / 10) * 10;
-  if (!Number.isFinite(rounded)) return value;
-  return rounded % 10 === 5 ? rounded + 5 : rounded;
+  const divided = value / 10;
+  const rounded = Math.round(divided);
+  const result = rounded * 10;
+  if (!Number.isFinite(result)) return value;
+  console.log(`Rounding: ${value} -> ${result}`);
+  return result;
 }
 function calculateAllRates(gold24Sale, silverSale, settings) {
   const perc24Purchase = settings?.perc_24k_purchase ?? 0.985;
