@@ -12,8 +12,8 @@ const externalRatesSchema = z.object({
 });
 
 function roundRate(value: number): number {
-  // Always round to nearest 10, rounding UP for .5
-  const result = Math.ceil(value / 10) * 10;
+  // Round to nearest 10 (values ending in 5 will round up to 10)
+  const result = Math.round(value / 10) * 10;
   if (!Number.isFinite(result)) return value;
   console.log(`Rounding: ${value} -> ${result}`);
   return result;
@@ -90,10 +90,11 @@ export async function syncRatesFromExternal(
   const payload = externalRatesSchema.parse(await response.json());
 
   // Get values from the businessmantra API format
+  // Silver API returns per 10 grams, convert to per kg by multiplying by 100
   const gold24Sale = payload["24K Gold"] ? roundRate(payload["24K Gold"]) : null;
   const gold22Sale = payload["22K Gold"] ? roundRate(payload["22K Gold"]) : null;
   const gold18Sale = payload["18K Gold"] ? roundRate(payload["18K Gold"]) : null;
-  const silverSale = payload["Silver"] ? roundRate(payload["Silver"]) : null;
+  const silverSale = payload["Silver"] ? roundRate(payload["Silver"] * 100) : null;
 
   // Validate we got the required data
   if (!gold24Sale || !silverSale) {
