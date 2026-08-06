@@ -70,10 +70,42 @@ export class PostgresStorage implements IStorage {
     await ensureDbReady();
     const db = getDb();
 
+    // Get the most recent rate to compare
+    const currentRates = await db.select().from(goldRates)
+      .where(eq(goldRates.is_active, true))
+      .orderBy(desc(goldRates.created_date))
+      .limit(1);
+
+    // Compare all rate values with the most recent entry
+    if (currentRates.length > 0) {
+      const lastRate = currentRates[0];
+      const rateFields = [
+        'gold_24k_sale', 'gold_24k_purchase', 'gold_22k_sale', 'gold_22k_purchase',
+        'gold_18k_sale', 'gold_18k_purchase', 'silver_per_kg_sale', 'silver_per_kg_purchase'
+      ];
+
+      let hasChanges = false;
+      for (const field of rateFields) {
+        const lastValue = Number(lastRate[field as keyof GoldRate]);
+        const newValue = Number(rate[field as keyof InsertGoldRate]);
+        if (lastValue !== newValue) {
+          hasChanges = true;
+          console.log(`Rate change detected: ${field} - Old: ${lastValue}, New: ${newValue}`);
+          break;
+        }
+      }
+
+      if (!hasChanges) {
+        console.log("No rate changes detected, skipping database insert");
+        return lastRate;
+      }
+    }
+
     // Deactivate all existing rates
     await db.update(goldRates).set({ is_active: false });
 
     const result = await db.insert(goldRates).values(rate).returning();
+    console.log(`New gold rate created with ID: ${result[0].id}`);
     return result[0];
   }
 

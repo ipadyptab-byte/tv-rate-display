@@ -15,6 +15,7 @@ export const goldRates = pgTable("gold_rates", {
   silver_per_kg_sale: real("silver_per_kg_sale").notNull(),
   silver_per_kg_purchase: real("silver_per_kg_purchase").notNull(),
   is_active: boolean("is_active").default(true),
+  source: text("source").default('api'),
   created_date: timestamp("created_date").defaultNow()
 });
 
