@@ -20,6 +20,7 @@ import {
 } from "@shared/schema";
 import { eq, desc, asc } from "drizzle-orm";
 import { ensureDbReady, getDb } from "./db";
+import { writeCurrentRatesFile } from "./currentrates-file";
 
 export interface IStorage {
   // Gold Rates
@@ -74,6 +75,7 @@ export class PostgresStorage implements IStorage {
     await db.update(goldRates).set({ is_active: false });
 
     const result = await db.insert(goldRates).values(rate).returning();
+    await writeCurrentRatesFile(result[0]);
     return result[0];
   }
 
