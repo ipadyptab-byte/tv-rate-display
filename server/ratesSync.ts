@@ -12,9 +12,11 @@ const externalRatesSchema = z.object({
 });
 
 function roundRate(value: number): number {
-  // Round to nearest 10 (ensure always rounds up if ending in 5)
+  // Round to nearest 10
   const rounded = Math.round(value / 10) * 10;
-  return Number.isFinite(rounded) ? rounded : value;
+  if (!Number.isFinite(rounded)) return value;
+  // Ensure values ending in 5 round up to next 10
+  return (rounded % 10 === 5) ? rounded + 5 : rounded;
 }
 
 function calculateAllRates(gold24Sale: number, silverSale: number, settings: any) {
