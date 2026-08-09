@@ -299,7 +299,7 @@ export default function TVDisplay() {
                       </div>
                       <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
                         <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>EXCHANGE</p>
-                        <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.gold_22k_exchange}</p>
+                        <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.gold_22k_exchange ?? "-"}</p>
                       </div>
                       <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
                         <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>PURCHASE</p>
@@ -323,7 +323,7 @@ export default function TVDisplay() {
                       </div>
                       <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
                         <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>EXCHANGE</p>
-                        <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.gold_18k_exchange}</p>
+                        <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.gold_18k_exchange ?? "-"}</p>
                       </div>
                       <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
                         <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>PURCHASE</p>
@@ -353,7 +353,7 @@ export default function TVDisplay() {
                         </div>
                         <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
                           <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>EXCHANGE</p>
-                          <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.silver_per_kg_exchange}</p>
+                          <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.silver_per_kg_exchange ?? "-"}</p>
                         </div>
                         <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
                           <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>PURCHASE</p>
