@@ -66,18 +66,18 @@ export class PostgresStorage implements IStorage {
     
     if (rates[0]) {
       const rate = rates[0];
-      // Calculate exchange rates on-the-fly if they don't exist (for backwards compatibility)
-      // @ts-ignore - these fields may not exist in older database schemas
-      if (rate.gold_22k_exchange === undefined || rate.gold_22k_exchange === null) {
-        const gold24Sale = rate.gold_24k_sale;
-        // @ts-ignore
-        rate.gold_22k_exchange = Math.round(gold24Sale * 0.91 / 10) * 10; // 91% of 24K
-        // @ts-ignore
-        rate.gold_18k_exchange = Math.round(gold24Sale * 0.85 / 10) * 10; // 85% of 24K
-        // @ts-ignore
-        rate.silver_per_kg_exchange = rate.silver_per_kg_sale - 3000; // sale - 3000
-      }
-      return rate;
+      const gold24Sale = Number(rate.gold_24k_sale);
+      const gold22kExchange = Math.round(gold24Sale * 0.91 / 10) * 10;
+      const gold18kExchange = Math.round(gold24Sale * 0.85 / 10) * 10;
+      const silverExchange = Number(rate.silver_per_kg_sale) - 3000;
+      
+      // Return a new object with all fields including calculated exchange rates
+      return {
+        ...rate,
+        gold_22k_exchange: (rate as any).gold_22k_exchange ?? gold22kExchange,
+        gold_18k_exchange: (rate as any).gold_18k_exchange ?? gold18kExchange,
+        silver_per_kg_exchange: (rate as any).silver_per_kg_exchange ?? silverExchange,
+      } as GoldRate;
     }
     return rates[0];
   }
