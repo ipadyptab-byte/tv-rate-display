@@ -63,6 +63,22 @@ export class PostgresStorage implements IStorage {
       .where(eq(goldRates.is_active, true))
       .orderBy(desc(goldRates.created_date))
       .limit(1);
+    
+    if (rates[0]) {
+      const rate = rates[0];
+      // Calculate exchange rates on-the-fly if they don't exist (for backwards compatibility)
+      // @ts-ignore - these fields may not exist in older database schemas
+      if (rate.gold_22k_exchange === undefined || rate.gold_22k_exchange === null) {
+        const gold24Sale = rate.gold_24k_sale;
+        // @ts-ignore
+        rate.gold_22k_exchange = Math.round(gold24Sale * 0.91 / 10) * 10; // 91% of 24K
+        // @ts-ignore
+        rate.gold_18k_exchange = Math.round(gold24Sale * 0.85 / 10) * 10; // 85% of 24K
+        // @ts-ignore
+        rate.silver_per_kg_exchange = rate.silver_per_kg_sale - 3000; // sale - 3000
+      }
+      return rate;
+    }
     return rates[0];
   }
 
