@@ -272,7 +272,7 @@ export default function TVDisplay() {
                         <i className="fas fa-star text-white"></i>
                       </div>
                     </div>
-                    <div className={`grid grid-cols-2 gap-${screenSize === 'tv' ? '3' : '2'}`}>
+                    <div className={screenSize === 'tv' ? 'grid grid-cols-2 gap-3' : 'grid grid-cols-2 gap-2'}>
                       <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
                         <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SALE RATE</p>
                         <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.gold_24k_sale}</p>
@@ -292,7 +292,7 @@ export default function TVDisplay() {
                         <i className="fas fa-crown text-white"></i>
                       </div>
                     </div>
-                    <div className={`grid grid-cols-3 gap-${screenSize === 'tv' ? '3' : '2'}`}>
+                    <div className={screenSize === 'tv' ? 'grid grid-cols-3 gap-3' : 'grid grid-cols-3 gap-2'}>
                       <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
                         <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SALE</p>
                         <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.gold_22k_sale}</p>
@@ -316,7 +316,7 @@ export default function TVDisplay() {
                         <i className="fas fa-gem text-white"></i>
                       </div>
                     </div>
-                    <div className={`grid grid-cols-3 gap-${screenSize === 'tv' ? '3' : '2'}`}>
+                    <div className={screenSize === 'tv' ? 'grid grid-cols-3 gap-3' : 'grid grid-cols-3 gap-2'}>
                       <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
                         <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SALE</p>
                         <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.gold_18k_sale}</p>
@@ -346,7 +346,7 @@ export default function TVDisplay() {
                           <i className="fas fa-circle text-white"></i>
                         </div>
                       </div>
-                      <div className={`grid grid-cols-3 gap-${screenSize === 'tv' ? '3' : '2'}`}>
+                      <div className={screenSize === 'tv' ? 'grid grid-cols-3 gap-3' : 'grid grid-cols-3 gap-2'}>
                         <div className="text-center p-1 rounded-lg border" style={{ backgroundColor: getRateBoxBg(settings?.background_color || "#FFF8E1"), borderColor: isLightColor(settings?.background_color || "#FFF8E1") ? "#cbd5e0" : "#4a5568" }}>
                           <p className={`font-semibold ${screenSize === 'tv' ? 'text-base' : screenSize === 'tablet' ? 'text-xs' : 'text-[10px]'}`} style={{ color: getRateLabelColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>SALE</p>
                           <p className={`${rateFontSize} font-bold`} style={{ color: getRateNumberColor(settings?.background_color || "#FFF8E1", settings?.text_color) }}>₹{currentRates.silver_per_kg_sale}</p>
