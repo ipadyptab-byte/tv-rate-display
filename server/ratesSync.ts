@@ -71,11 +71,14 @@ export async function syncRatesFromExternal(
   storage: IStorage,
   opts: { force: boolean },
 ) {
+  console.log("=== Starting rate sync (force=" + opts.force + ") ===");
+  
   const settings = await storage.getRateSettings();
   const intervalMinutes = settings?.check_interval_minutes ?? 1;
+  console.log("Sync interval:", intervalMinutes, "minutes");
 
   const current = await storage.getCurrentRates();
-  console.log("Current rates:", current ? `ID ${current.id}` : "none");
+  console.log("Current rates:", current ? `ID ${current.id}, 24K=${current.gold_24k_sale}` : "none");
   
   if (!opts.force && current?.created_date) {
     const last = current.created_date instanceof Date
@@ -93,16 +96,24 @@ export async function syncRatesFromExternal(
   }
 
   const url = process.env.EXTERNAL_RATES_URL;
+  console.log("External URL:", url || "NOT SET");
+  
   if (!url) {
-    throw new Error("EXTERNAL_RATES_URL is not set");
+    throw new Error("EXTERNAL_RATES_URL environment variable is not set. Please set it to your rates API endpoint.");
   }
 
+  console.log("Fetching rates from external API...");
   const response = await fetch(url, { headers: { "accept": "application/json" } });
+  console.log("External API response status:", response.status);
+  
   if (!response.ok) {
     throw new Error(`External rates fetch failed (${response.status})`);
   }
 
-  const payload = externalRatesSchema.parse(await response.json());
+  const rawData = await response.json();
+  console.log("External API raw response:", JSON.stringify(rawData));
+
+  const payload = externalRatesSchema.parse(rawData);
 
   // Get values from the businessmantra API format
   // Silver API returns per 10 grams, convert to per kg by multiplying by 100
@@ -110,6 +121,8 @@ export async function syncRatesFromExternal(
   const gold22Sale = payload["22K Gold"] ? roundRate(payload["22K Gold"]) : null;
   const gold18Sale = payload["18K Gold"] ? roundRate(payload["18K Gold"]) : null;
   const silverSale = payload["Silver"] ? roundRate(payload["Silver"] * 100) : null;
+
+  console.log("Parsed rates - 24K:", gold24Sale, "Silver:", silverSale);
 
   // Validate we got the required data
   if (!gold24Sale || !silverSale) {
