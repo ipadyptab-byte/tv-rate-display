@@ -25,11 +25,15 @@ async function ensureSchema(client: Pool) {
       gold_24k_purchase REAL NOT NULL,
       gold_22k_sale REAL NOT NULL,
       gold_22k_purchase REAL NOT NULL,
+      gold_22k_exchange REAL DEFAULT 0,
       gold_18k_sale REAL NOT NULL,
       gold_18k_purchase REAL NOT NULL,
+      gold_18k_exchange REAL DEFAULT 0,
       silver_per_kg_sale REAL NOT NULL,
       silver_per_kg_purchase REAL NOT NULL,
+      silver_per_kg_exchange REAL DEFAULT 0,
       is_active BOOLEAN DEFAULT true,
+      source TEXT DEFAULT 'api',
       created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -86,13 +90,38 @@ async function ensureSchema(client: Pool) {
       perc_24k_purchase REAL DEFAULT 0.985,
       perc_22k_sale REAL DEFAULT 0.92,
       perc_22k_purchase REAL DEFAULT 0.90,
+      perc_22k_exchange REAL DEFAULT 0.91,
       perc_18k_sale REAL DEFAULT 0.86,
       perc_18k_purchase REAL DEFAULT 0.80,
+      perc_18k_exchange REAL DEFAULT 0.85,
       silver_purchase_offset REAL DEFAULT -5000,
+      silver_exchange_offset REAL DEFAULT -3000,
       check_interval_minutes INTEGER DEFAULT 5,
       created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  // Add missing columns if they don't exist (for existing databases)
+  try {
+    await client.query(`
+      ALTER TABLE gold_rates ADD COLUMN IF NOT EXISTS gold_22k_exchange REAL DEFAULT 0;
+      ALTER TABLE gold_rates ADD COLUMN IF NOT EXISTS gold_18k_exchange REAL DEFAULT 0;
+      ALTER TABLE gold_rates ADD COLUMN IF NOT EXISTS silver_per_kg_exchange REAL DEFAULT 0;
+      ALTER TABLE gold_rates ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'api';
+    `);
+  } catch (e) {
+    // Ignore errors if columns already exist
+  }
+
+  try {
+    await client.query(`
+      ALTER TABLE rate_settings ADD COLUMN IF NOT EXISTS perc_22k_exchange REAL DEFAULT 0.91;
+      ALTER TABLE rate_settings ADD COLUMN IF NOT EXISTS perc_18k_exchange REAL DEFAULT 0.85;
+      ALTER TABLE rate_settings ADD COLUMN IF NOT EXISTS silver_exchange_offset REAL DEFAULT -3000;
+    `);
+  } catch (e) {
+    // Ignore errors if columns already exist
+  }
 }
 
 function init() {
